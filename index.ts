@@ -1,66 +1,58 @@
-import express, { Express,Request,Response,NextFunction } from "express";
+import express, { Express, Request, Response, NextFunction } from "express";
 const http = require('http');
 const cors = require('cors');
-const {ApolloServer}= require('apollo-server-express');
-const {WebSocketServer} = require('ws');
-const {makeExecutableSchema} = require('@graphql-tools/schema');
-const { useServer } = require('graphql-ws/use/ws')
-const mongoose = require('mongoose')
+const { ApolloServer } = require('apollo-server-express');
+const { WebSocketServer } = require('ws');
+const { makeExecutableSchema } = require('@graphql-tools/schema');
+const { useServer } = require('graphql-ws/use/ws');
+const mongoose = require('mongoose');
 
-require('dotenv').config()
+require('dotenv').config();
 const PORT = process.env.PORT;
 const LINK_DATABASE = process.env.LINK_DATABASE;
 
 const typeDefs = require('./src/gql/typeDefs');
-const resolvers = require('./src/gql/resolvers')
+const resolvers = require('./src/gql/resolvers/index');
+const context = require('./src/gql/middleware/auth')
 
-const app:Express = express(); 
+const app: Express = express();
 
-app.use((req: Request, res: Response, next: NextFunction) => {
-     res.header("Access-Control-Allow-Origin", "*");
-     res.header(
-       "Access-Control-Allow-Methods",
-       "GET, PUT, POST, DELETE, OPTIONS"
-     );
-     res.header(
-       "Access-Control-Allow-Headers",
-       "Origin, X-Requested-With, Content-Type, Accept, Authorization"
-     );
-     next();
-   });
-   
-   app.use(cors())
-   app.use(express.json()); 
+app.use(cors());
+app.use(express.json());
 
-const httpServer = http.createServer(app)
+const httpServer = http.createServer(app);
 
 const wsServer = new WebSocketServer({
-     server:httpServer,
-     path:'gql'
-})
- 
+    server: httpServer,
+    path: '/graphql',
+});
 
-const schema = makeExecutableSchema({typeDefs,resolvers});
-const server = new ApolloServer({schema})
+const schema = makeExecutableSchema({ typeDefs, resolvers });
+const server = new ApolloServer({ 
+    schema,
+    context:context,
+    formatError: (error:Error) => {
+        return new Error(error.message);
+    },
+ });
 
-const start = async()=> {
-     try{
-          useServer({schema},wsServer);
-          await server.start();
-          
-          mongoose.connect(LINK_DATABASE).then(() => {
-          console.log('Connected to MongoDB');
-          }).catch((err:Error) => {
-            console.error('Error connecting to MongoDB', err);
-          });
+const start = async () => {
+    try {
+        useServer({ schema }, wsServer);
+        
+        await server.start();
+        server.applyMiddleware({ app }); 
 
-          httpServer.listen(PORT,()=>console.log(`server started on port ${PORT}`));
-     }
-     catch(e){  
-          console.log(e)    
-     }
+        await mongoose.connect(LINK_DATABASE);
+        console.log('Connected to MongoDB');
+
+        httpServer.listen(PORT, () => {
+            console.log(`Server started on port ${PORT}`);
+            console.log(`GraphQL endpoint: http://localhost:${PORT}${server.graphqlPath}`);
+        });
+    } catch (e) {  
+        console.error(e);
+    }
 }
 
-start()
-
-
+start();
