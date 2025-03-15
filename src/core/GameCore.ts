@@ -1,6 +1,6 @@
-import { Role } from "./assets/shemas/Role";
-import { Player } from "./assets/shemas/Player";
-import { roles } from "./assets/Roles";
+import { Role } from "../assets/schemas/Role";
+import { Player } from "../assets/schemas/Player";
+import { roles } from "../assets/variables/variables";
  
 function distributeRoles(players: Player[]): Role[] {
      const playersWithRoles: Array<Role> = [];

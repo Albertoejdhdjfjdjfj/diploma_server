@@ -1,6 +1,6 @@
 import { Schema, model,Model, Document } from "mongoose";
-import { Role,RoleSchema } from "../core/assets/shemas/Role";
-import { Player,PlayerSchema } from "../core/assets/shemas/Player";
+import { Role,RoleSchema } from "../schemas/Role";
+import { Player,PlayerSchema } from "../schemas/Player";
 
 export interface Game{
      players: Array<Player>;
@@ -29,7 +29,8 @@ export const GameSchema: Schema<GameDocument> = new Schema<GameDocument>({
      }],
      roles: [{
          type: RoleSchema,      
-         required: true
+         required: true,
+         default:[]
      }],
      observers: [{
          type: PlayerSchema,    
@@ -49,12 +50,12 @@ export const GameSchema: Schema<GameDocument> = new Schema<GameDocument>({
      rounds: {
          type: Number,
          required: true,
-         default: 1               
+         default: 0               
      },
-     winner: {
-         type: [PlayerSchema],      
+     winner: [{
+         type: PlayerSchema,      
          default: []                
-     }
+     }]
  });
 
 export const GameModel: Model<GameDocument> = model ("Game Room", GameSchema);

@@ -1,8 +1,9 @@
-import { GameRoomModel,GameRoomDocument } from '../../models/GameRoom';
+import { GameRoomModel,GameRoomDocument } from '../../assets/models/GameRoom';
+import { GameModel,GameDocument } from '../../assets/models/Game';
 
 const gameResolver = {
     Query: {   
-      getGameRooms:async(_:any,args:any)=>{
+      getGameRooms:async(_:any,args:any):Promise<Array<GameRoomDocument>> =>{
           try {
                 const { sort, page = 1, limit=5 } = args;
                 const skip = (page - 1) * limit;
@@ -24,7 +25,7 @@ const gameResolver = {
       }     
     },
     Mutation: {
-      createGameRoom:async(_: any, args:any,context:any)=>{
+      createGameRoom:async(_: any, args:any,context:any): Promise<GameRoomDocument> =>{
         try {
         const {user}=context;
         const {name}=args;
@@ -109,6 +110,28 @@ const gameResolver = {
         } catch (error) {
             throw new Error((error as Error).message);
         }
+    },
+
+    startGame:async (_: any, args: any, context: any): Promise<void> => {
+      try{
+        const { user } = context; 
+        const { id } = args; 
+
+        const gameRoom: GameRoomDocument | null = await GameRoomModel.findById(id);
+
+        if (!gameRoom) {
+            throw new Error("The Game room does not exist");
+        }
+
+        const startedGame = new GameModel({players: [...gameRoom.players]});
+
+        await gameRoom.deleteOne;
+
+        return ;
+      }
+      catch(error){
+        throw new Error((error as Error).message);
+      }
     }
     }, 
 };

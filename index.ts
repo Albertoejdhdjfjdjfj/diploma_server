@@ -1,4 +1,4 @@
-import express, { Express, Request, Response, NextFunction } from "express";
+import express, { Express } from "express";
 const http = require('http');
 const cors = require('cors');
 const { ApolloServer } = require('apollo-server-express');
@@ -11,7 +11,7 @@ require('dotenv').config();
 const PORT = process.env.PORT;
 const LINK_DATABASE = process.env.LINK_DATABASE;
 
-const typeDefs = require('./src/gql/typeDefs');
+const typeDefs = require('./src/assets/schemas/typeDefs');
 const resolvers = require('./src/gql/resolvers/index');
 const context = require('./src/gql/middleware/auth')
 

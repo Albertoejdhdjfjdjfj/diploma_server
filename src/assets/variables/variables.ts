@@ -1,5 +1,7 @@
 export interface RoleConfig{name:string;num:number}
 
+export const playersLimit:number = 10;
+
 export const roles:Array<RoleConfig> = [
      {
           name:"civilian",

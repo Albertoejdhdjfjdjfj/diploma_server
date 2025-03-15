@@ -1,4 +1,4 @@
-import { UserModel,User } from '../../models/User';
+import { UserModel,User } from '../../assets/models/User';
 
 const validator = require("validator");
 const bcrypt = require("bcrypt");

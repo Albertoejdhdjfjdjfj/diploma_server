@@ -12,6 +12,7 @@ const typeDefs = gql`
         createGameRoom(name: String!): GameRoom
         joinGameRoom(id:ID!):GameRoom
         leaveGameRoom(id:ID!):GameRoom
+        startGame(id:ID!):String
     }
 
     type GameRoom {
