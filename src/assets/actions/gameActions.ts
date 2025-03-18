@@ -1,0 +1,2 @@
+export const GAME_INITIATED = 'GAME_INITIATED';
+export const ROLE_ASSIGNED = 'ROLE_ASSIGNED';

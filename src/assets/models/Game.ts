@@ -58,4 +58,4 @@ export const GameSchema: Schema<GameDocument> = new Schema<GameDocument>({
      }]
  });
 
-export const GameModel: Model<GameDocument> = model ("Game Room", GameSchema);
+export const GameModel: Model<GameDocument> = model ("Game", GameSchema);

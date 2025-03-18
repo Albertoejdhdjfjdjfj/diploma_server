@@ -15,6 +15,17 @@ const typeDefs = gql`
         startGame(id:ID!):String
     }
 
+    type Subscription{
+        roleAssigned: RoleAssignedPayload
+        gameRoomUpdated: GameRoom,
+        initGame: String
+    }
+
+    type RoleAssignedPayload {
+        playerId: String
+        role: String
+    }
+
     type GameRoom {
         id: ID!,
         name: String!,

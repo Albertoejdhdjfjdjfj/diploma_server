@@ -2,7 +2,7 @@ import { Role } from "../assets/schemas/Role";
 import { Player } from "../assets/schemas/Player";
 import { roles } from "../assets/variables/variables";
  
-function distributeRoles(players: Player[]): Role[] {
+export function distributeRoles(players: Player[]): Role[] {
      const playersWithRoles: Array<Role> = [];
      
      const availablePlayers = [...players];
