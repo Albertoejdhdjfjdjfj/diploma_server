@@ -1,10 +1,8 @@
-import { PubSub } from 'graphql-subscriptions';
 import { GameRoomModel,GameRoomDocument } from '../../assets/models/GameRoom';
 import { GameModel,GameDocument } from '../../assets/models/Game';
 import { playersLimit } from '../../assets/variables/variables';
 import { GAME_INITIATED } from '../../assets/actions/gameActions';
 
-const pubsub = new PubSub();
 
 const gameRoomResolver = {
     Query: {   
@@ -69,14 +67,14 @@ const gameRoomResolver = {
                 "players.playerId": user.id
             });
     
-            if (userGames && userGames.id !== gameRoom.id || joinGames) {
-                throw new Error('You already have an active game room');
-            }
+            // if (userGames && userGames.id !== gameRoom.id || joinGames) {
+            //     throw new Error('You already have an active game room');
+            // }
     
-            const playerExists = gameRoom.players.some(player => player.playerId === user.id);
-            if (playerExists) {
-                throw new Error("You are already in the game room");
-            }
+            // const playerExists = gameRoom.players.some(player => player.playerId === user.id);
+            // if (playerExists) {
+            //     throw new Error("You are already in the game room");
+            // }
             
             if(gameRoom.players.length>playersLimit){
             gameRoom.observers.push({
@@ -99,7 +97,7 @@ const gameRoomResolver = {
         }
     },
 
-      leaveGameRoom: async (_: any, args: any, context: any): Promise<GameRoomDocument> => {
+    leaveGameRoom: async (_: any, args: any, context: any): Promise<GameRoomDocument> => {
         try {
             const { user } = context; 
             const { id } = args; 
@@ -124,48 +122,8 @@ const gameRoomResolver = {
         } catch (error) {
             throw new Error((error as Error).message);
         }
-    },
-
-    startGame: async (_: any, args: any, context: any): Promise<string> => {
-        try {
-            const { user } = context; 
-            const { id } = args; 
-    
-            const gameRoom: GameRoomDocument | null = await GameRoomModel.findById(id);
-
-            if (!gameRoom) {
-                throw new Error("The Game room does not exist");
-            }
-
-            if(user.id!== gameRoom.creator.creatorId){
-                throw new Error("You are not creator of this game");
-            }
-
-            if(gameRoom.players.length<playersLimit){
-                throw new Error("Not enough players");
-            }
-    
-            const startedGame = new GameModel({
-                players: [...gameRoom.players],
-                observers: [...gameRoom.observers],
-            });
-            
-            await startedGame.save();
-
-            pubsub.publish(GAME_INITIATED, { initGame: { players: gameRoom.players } });
-            await gameRoom.deleteOne();
-    
-            return "Game started successfully"; 
-        } catch (error) {
-            throw new Error((error as Error).message);
-        }
-    }
-    },
-    Subscription:{
-        initGame: {
-            subscribe: () => pubsub.asyncIterableIterator([GAME_INITIATED]),
-        },
-    } 
+     }
+   }
 };
 
 module.exports = gameRoomResolver;

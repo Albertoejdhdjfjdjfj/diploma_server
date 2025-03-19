@@ -15,7 +15,6 @@ module.exports = {
           ...gameResolver.Mutation
      },
      Subscription:{
-          ...gameRoomResolver.Subscription,
           ...gameResolver.Subscription
      }
 }
