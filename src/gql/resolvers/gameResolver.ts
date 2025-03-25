@@ -3,9 +3,9 @@ import { GameRoomModel,GameRoomDocument } from '../../assets/models/GameRoom';
 import { PubSub, withFilter } from 'graphql-subscriptions';
 import { playersLimit } from '../../assets/variables/variables';
 import { NewMessage } from '../../assets/actions/gameActions';
-import { Role } from '../../assets/schemas/Role';
 import { NEW_MESSAGE } from '../../assets/actions/actionsTypes';
 import { startNewRound } from '../../core/GameCore';
+import { decodeToken } from '../../assets/functions/decodeToken';
 export const pubsub = new PubSub();
 
 const gameResolver = {
@@ -50,14 +50,12 @@ const gameResolver = {
         message: {
             subscribe: withFilter<NewMessage>(
                 () => pubsub.asyncIterableIterator(NEW_MESSAGE),
-                (payload: NewMessage | undefined) => {
+                (payload: NewMessage | undefined, variables) => {
                     if (!payload) {
-                        return false; // Если нет payload, прерываем
+                        return false; 
                     }
-
-                    const{user}=context()
-        
-                     return true
+                    const decodedToken = decodeToken(variables.token); 
+                    return decodedToken.id === payload.message.receiver.playerId
                 }
             )
         },
