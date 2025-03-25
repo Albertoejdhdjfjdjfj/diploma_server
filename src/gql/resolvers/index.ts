@@ -1,5 +1,3 @@
-import { subscribe } from "diagnostics_channel"
-
 const userResolver = require('./userResolver')
 const gameRoomResolver = require('./gameRoomResolver')
 const gameResolver = require('./gameResolver')

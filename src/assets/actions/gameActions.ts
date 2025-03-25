@@ -1,2 +1,3 @@
-export const GAME_INITIATED = 'GAME_INITIATED';
-export const ROLE_ASSIGNED = 'ROLE_ASSIGNED';
+import { Message } from "../schemas/Message";
+import { Player } from "../schemas/Player";
+export type NewMessage = {message:{receiver:Player,chat:Array<Message>}}

@@ -1,12 +1,12 @@
 import { GameModel,GameDocument } from '../../assets/models/Game';
 import { GameRoomModel,GameRoomDocument } from '../../assets/models/GameRoom';
-import { PubSub } from 'graphql-subscriptions';
-import {distributeRoles} from '../../core/GameCore'
+import { PubSub, withFilter } from 'graphql-subscriptions';
 import { playersLimit } from '../../assets/variables/variables';
-import { GAME_INITIATED,ROLE_ASSIGNED } from '../../assets/actions/gameActions';
-import { InitGame,RoleAssigned } from '../../assets/actions/actionsTypes';
-
-const pubsub = new PubSub();
+import { NewMessage } from '../../assets/actions/gameActions';
+import { Role } from '../../assets/schemas/Role';
+import { NEW_MESSAGE } from '../../assets/actions/actionsTypes';
+import { startNewRound } from '../../core/GameCore';
+export const pubsub = new PubSub();
 
 const gameResolver = {
     Query: {   
@@ -32,29 +32,37 @@ const gameResolver = {
                       throw new Error("Not enough players");
                   }
           
-                  const startedGame = new GameModel({
+                  const startedGame:GameDocument = new GameModel({
                       players: [...gameRoom.players],
                       observers: [...gameRoom.observers],
                   });
                   
-                  // await startedGame.save();
-      
-                  pubsub.publish(GAME_INITIATED, { initGame:"Game has been initialized!"});
+                  await startedGame.save();
+    
                   // await gameRoom.deleteOne();
-          
-                  return; 
+                  startNewRound(startedGame.id,pubsub)
               } catch (error) {
                   throw new Error((error as Error).message);
               }
           }
      }, 
      Subscription: {
-        initGame: {        
-            subscribe: () => pubsub.asyncIterableIterator(GAME_INITIATED),
+        message: {
+            subscribe: withFilter<NewMessage>(
+                () => pubsub.asyncIterableIterator(NEW_MESSAGE),
+                (payload: NewMessage | undefined) => {
+                    if (!payload) {
+                        return false; // Если нет payload, прерываем
+                    }
+
+                    const{user}=context()
+        
+                     return true
+                }
+            )
         },
-        roleAssign: {
-            subscribe: () => pubsub.asyncIterableIterator(ROLE_ASSIGNED),  
-        },
+
+
     }, 
 };
 

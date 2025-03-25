@@ -16,15 +16,17 @@ const typeDefs = gql`
     }
 
     type Subscription{
-        roleAssigned: RoleAssignedPayload
-        gameRoomUpdated: GameRoom,
-        initGame: String,
-        roleAssign: String
+        message(token:String): MessageResponse
     }
 
-    type RoleAssignedPayload {
-        playerId: String
-        role: String
+    type MessageResponse {
+        receiver:Player,
+        chat: [Message!]!,
+    }
+
+    type Message {
+        player: Player,
+        content:String
     }
 
     type GameRoom {

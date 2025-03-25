@@ -1,6 +1,7 @@
 import { Schema, model,Model, Document } from "mongoose";
 import { Role,RoleSchema } from "../schemas/Role";
 import { Player,PlayerSchema } from "../schemas/Player";
+import { Message,MessageSchema } from "../schemas/Message";
 
 export interface Game{
      players: Array<Player>;
@@ -8,7 +9,8 @@ export interface Game{
      observers: Player[];       
      isActive: boolean;         
      currentPhase: GamePhase;   
-     rounds: number;            
+     rounds: number;  
+     chat:Array<Message>          
      winner?: Player[];    
 }
 
@@ -52,7 +54,11 @@ export const GameSchema: Schema<GameDocument> = new Schema<GameDocument>({
          required: true,
          default: 0               
      },
-     winner: [{
+     chat:[{
+        type:MessageSchema,
+        default:[]
+    }],
+     winner: [{ 
          type: PlayerSchema,      
          default: []                
      }]

@@ -1,11 +1,10 @@
-// В файле GameRoom.ts
 import { Schema, model, Model, Document } from "mongoose";
 import { PlayerSchema, Player } from "../schemas/Player";
 import { CreatorSchema, Creator } from "../schemas/Creator";
 
 export interface GameRoom {
     name: string;
-    creator: Creator;
+    creator: Creator;  
     players: Array<Player>;
     observers: Array<Player>;
 }

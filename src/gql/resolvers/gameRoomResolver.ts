@@ -1,7 +1,6 @@
 import { GameRoomModel,GameRoomDocument } from '../../assets/models/GameRoom';
 import { GameModel,GameDocument } from '../../assets/models/Game';
 import { playersLimit } from '../../assets/variables/variables';
-import { GAME_INITIATED } from '../../assets/actions/gameActions';
 
 
 const gameRoomResolver = {
@@ -81,6 +80,7 @@ const gameRoomResolver = {
                 playerId: user.id,
                 nickname: user.nickname 
             });
+            
             const updatedGameRoom = await gameRoom.save();
             return updatedGameRoom; 
             }
