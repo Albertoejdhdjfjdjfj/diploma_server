@@ -17,6 +17,12 @@ const typeDefs = gql`
 
     type Subscription{
         message(token:String): MessageResponse
+        role(token:String): RoleResponse
+    }
+    
+    type RoleResponse {
+        receiver:Player,
+        role:String
     }
 
     type MessageResponse {

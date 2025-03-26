@@ -2,8 +2,8 @@ import { GameModel,GameDocument } from '../../assets/models/Game';
 import { GameRoomModel,GameRoomDocument } from '../../assets/models/GameRoom';
 import { PubSub, withFilter } from 'graphql-subscriptions';
 import { playersLimit } from '../../assets/variables/variables';
-import { NewMessage } from '../../assets/actions/gameActions';
-import { NEW_MESSAGE } from '../../assets/actions/actionsTypes';
+import { NewMessage,AssignRole } from '../../assets/actions/gameActions';
+import { NEW_MESSAGE,ASSIGNING_ROLE } from '../../assets/actions/actionsTypes';
 import { startNewRound } from '../../core/GameCore';
 import { decodeToken } from '../../assets/functions/decodeToken';
 export const pubsub = new PubSub();
@@ -55,9 +55,22 @@ const gameResolver = {
                         return false; 
                     }
                     const decodedToken = decodeToken(variables.token); 
+                    console.log(decodedToken.id , payload.message.receiver.playerId)
                     return decodedToken.id === payload.message.receiver.playerId
                 }
-            )
+            ),
+        },
+        role: {
+            subscribe: withFilter<AssignRole>(
+                () => pubsub.asyncIterableIterator(ASSIGNING_ROLE),
+                (payload: AssignRole|undefined, variables) => {
+                    if (!payload) {
+                        return false; 
+                    }
+                    const decodedToken = decodeToken(variables.token); 
+                    return decodedToken.id === payload.role.receiver.playerId
+                }
+            ),
         },
 
 
