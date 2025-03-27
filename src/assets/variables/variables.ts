@@ -1,202 +1,215 @@
+import { Roles } from "../enums/Roles";
 export interface RoleConfig{name:string;num:number}
 
 export const playersMax:number = 15;
 export const playersMin:number = 9;
 
 export const rolesDistribution: Array<Array<RoleConfig>> = [
-     
+     // Для 9 игроков
      [
          {
-             name: "civilian",
+             name: Roles.CIVILIAN,
              num: 4
          },
          {
-             name: "lover",
+             name: Roles.LOVER,
              num: 1
          },
          {
-             name: "sheriff",
+             name: Roles.SHERIFF,
              num: 1
          },
          {
-             name: "mafia",
+             name: Roles.MAFIA,
              num: 1
          },
          {
-             name: "don",
+             name: Roles.DON,
              num: 1
          },
          {
-             name: "maniac",
-             num: 1
-         },
-     ],
-     
-
-     [
-         {
-             name: "civilian",
-             num: 5
-         },
-         {
-             name: "lover",
-             num: 1
-         },
-         {
-             name: "sheriff",
-             num: 1
-         },
-         {
-             name: "mafia",
-             num: 1
-         },
-         {
-             name: "don",
-             num: 1
-         },
-         {
-             name: "maniac",
+             name: Roles.MANIAC,
              num: 1
          },
      ],
- 
-     
+      
+     // Для 10 игроков
      [
          {
-             name: "civilian",
+             name: Roles.CIVILIAN,
              num: 5
          },
          {
-             name: "lover",
+             name: Roles.LOVER,
              num: 1
          },
          {
-             name: "sheriff",
+             name: Roles.SHERIFF,
              num: 1
          },
          {
-             name: "mafia",
+             name: Roles.MAFIA,
+             num: 1
+         },
+         {
+             name: Roles.DON,
+             num: 1
+         },
+         {
+             name: Roles.MANIAC,
+             num: 1
+         },
+     ],
+  
+     // Для 11 игроков
+     [
+         {
+             name: Roles.CIVILIAN,
+             num: 5
+         },
+         {
+             name: Roles.LOVER,
+             num: 1
+         },
+         {
+             name: Roles.SHERIFF,
+             num: 1
+         },
+         {
+             name: Roles.MAFIA,
              num: 2
          },
          {
-             name: "don",
+             name: Roles.DON,
              num: 1
          },
          {
-             name: "maniac",
+             name: Roles.MANIAC,
              num: 1
          },
      ],
- 
-     
+  
+     // Для 12 игроков
      [
          {
-             name: "civilian",
+             name: Roles.CIVILIAN,
              num: 6
          },
          {
-             name: "lover",
+             name: Roles.LOVER,
              num: 1
          },
          {
-             name: "sheriff",
+             name: Roles.SHERIFF,
              num: 1
          },
          {
-             name: "mafia",
+             name: Roles.MAFIA,
              num: 2
          },
          {
-             name: "don",
+             name: Roles.DON,
              num: 1
          },
          {
-             name: "maniac",
+             name: Roles.MANIAC,
              num: 1
          },
      ],
- 
-
+  
+     // Для 13 игроков
      [
          {
-             name: "civilian",
+             name: Roles.CIVILIAN,
              num: 5
          },
          {
-             name: "lover",
-             num: 2
-         },
-         {
-             name: "sheriff",
+             name: Roles.LOVER,
              num: 1
          },
          {
-             name: "mafia",
+             name: Roles.SHERIFF,
+             num: 1
+         },
+         {
+             name: Roles.MAFIA,
              num: 3
          },
          {
-             name: "don",
+             name: Roles.DON,
              num: 1
          },
          {
-             name: "maniac",
+             name: Roles.MANIAC,
+             num: 1
+         },
+         {
+             name: Roles.DOCTOR,
              num: 1
          },
      ],
- 
+  
      // Для 14 игроков
      [
          {
-             name: "civilian",
+             name: Roles.CIVILIAN,
              num: 6
          },
          {
-             name: "lover",
-             num: 2
-         },
-         {
-             name: "sheriff",
+             name: Roles.LOVER,
              num: 1
          },
          {
-             name: "mafia",
+             name: Roles.SHERIFF,
+             num: 1
+         },
+         {
+             name: Roles.MAFIA,
              num: 3
          },
          {
-             name: "don",
+             name: Roles.DON,
              num: 1
          },
          {
-             name: "maniac",
+             name: Roles.MANIAC,
              num: 1
          },
+         {
+                 name: Roles.DOCTOR,
+                 num: 1
+         },
      ],
- 
+  
      // Для 15 игроков
      [
          {
-             name: "civilian",
+             name: Roles.CIVILIAN,
              num: 7
          },
          {
-             name: "lover",
-             num: 2
-         },
-         {
-             name: "sheriff",
+             name: Roles.LOVER,
              num: 1
          },
          {
-             name: "mafia",
+             name: Roles.SHERIFF,
+             num: 1
+         },
+         {
+             name: Roles.MAFIA,
              num: 3
          },
          {
-             name: "don",
+             name: Roles.DON,
              num: 1
          },
          {
-             name: "maniac",
+             name: Roles.MANIAC,
              num: 1
          },
-     ],
- ];
+         {
+                 name: Roles.DOCTOR,
+                 num: 1
+         }
+     ]
+     ]

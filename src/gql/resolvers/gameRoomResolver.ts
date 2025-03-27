@@ -1,6 +1,6 @@
 import { GameRoomModel} from '../../assets/models/GameRoom';
 import { GameRoomDocument } from '../../assets/interfaces/GameRoom';
-import { playersLimit } from '../../assets/variables/variables';
+import { playersMax,playersMin } from '../../assets/variables/variables';
 
 
 const gameRoomResolver = {
@@ -75,11 +75,11 @@ const gameRoomResolver = {
             //     throw new Error("You are already in the game room");
             // }
             
-            if(gameRoom.players.length>playersLimit){
+            if(gameRoom.players.length>=playersMax){
             gameRoom.observers.push({
                 playerId: user.id,
                 nickname: user.nickname 
-            });
+            })
             
             const updatedGameRoom = await gameRoom.save();
             return updatedGameRoom; 

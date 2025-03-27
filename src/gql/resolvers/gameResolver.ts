@@ -3,7 +3,7 @@ import { GameDocument } from '../../assets/interfaces/Game';
 import { GameRoomDocument } from '../../assets/interfaces/GameRoom';
 import { GameRoomModel} from '../../assets/models/GameRoom';
 import { PubSub, withFilter } from 'graphql-subscriptions';
-import { playersLimit } from '../../assets/variables/variables';
+import { playersMin} from '../../assets/variables/variables';
 import { NewMessage,AssignRole } from '../../assets/actions/gameActions';
 import { NEW_MESSAGE,ASSIGNING_ROLE } from '../../assets/actions/actionsTypes';
 import { startNewRound } from '../../core/GameCore';
@@ -30,7 +30,7 @@ const gameResolver = {
                       throw new Error("You are not creator of this game");
                   }
       
-                  if(gameRoom.players.length<playersLimit){
+                  if(gameRoom.players.length<playersMin){
                       throw new Error("Not enough players");
                   }
           
