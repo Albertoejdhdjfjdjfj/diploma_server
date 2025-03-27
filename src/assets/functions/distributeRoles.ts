@@ -1,13 +1,13 @@
-import { Role } from "../schemas/Role";
-import { Player } from "../schemas/Player";
-import { roles } from "../variables/variables";
+import { Role } from '../interfaces/Role';
+import { Player } from '../interfaces/Player';
+import { rolesDistribution } from "../variables/variables";
 
 export function distributeRoles(players: Player[]): Role[] {
      const playersWithRoles: Array<Role> = [];
      
      const availablePlayers = [...players];
 
-     for (let role of roles) {
+     for (let role of rolesDistribution) {
          for (let i = 0; i < role.num; i++) {
              if (availablePlayers.length === 0) {
                  break; 

@@ -1,4 +1,5 @@
-import { UserModel,User } from '../../assets/models/User';
+import { UserDocument } from '../../assets/interfaces/User';
+import { UserModel} from '../../assets/models/User';
 
 const validator = require("validator");
 const bcrypt = require("bcrypt");
@@ -11,7 +12,7 @@ const userResolver = {
     Query: {
         getUserInfo:async (_: any, args:any) => {
             const{id}=args;
-            const user:User|null=await UserModel.findById(id as string);
+            const user:UserDocument|null=await UserModel.findById(id as string);
             if(!user){
               throw new Error('User does not exist')
             }
@@ -23,7 +24,7 @@ const userResolver = {
             try {
               const {email,password} = args;
 
-              const user: User | null = await UserModel.findOne({ email });
+              const user: UserDocument | null = await UserModel.findOne({ email });
               if (!user) {
                     throw new Error('Profile does not exist');
               }
@@ -45,7 +46,7 @@ const userResolver = {
           },
     },
     Mutation: {
-     userSignUp: async (_: any, { input }: {input:User}) => {
+     userSignUp: async (_: any, { input }: {input:UserDocument}) => {
           try {
             
             if(!validator.isEmail(input.email)){

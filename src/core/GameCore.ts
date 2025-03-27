@@ -1,7 +1,9 @@
 import { NEW_MESSAGE,ASSIGNING_ROLE } from "../assets/actions/actionsTypes";
-import { GameModel,GameDocument } from '../assets/models/Game';
+import { GameModel} from '../assets/models/Game';
+import { GameDocument } from "../assets/interfaces/Game";
 import { PubSub } from "graphql-subscriptions";
 import { distributeRoles } from "../assets/functions/distributeRoles";
+import {Roles} from "../assets/enums/Roles"
 
 // export async function game(gameId:String):Promise<void>{
     
@@ -20,10 +22,13 @@ export async function startNewRound(gameId: String, pubsub: PubSub): Promise<voi
         currentGame = await GameModel.findByIdAndUpdate(gameId, {
             $push: {
                 chat: {
-                    player: {
-                        nickname: "",
-                        playerId: ""
+                    sender:{
+                             user: {
+                                nickname: "admin",
+                                playerId: "admin"
+                            }
                     },
+                    receiver:Roles.ALL,
                     content: "Hello everyone, the game has started and you will be assigned the appropriate role",
                 }, 
             },

@@ -31,8 +31,12 @@ const typeDefs = gql`
     }
 
     type Message {
-        player: Player,
+        sender: Sender,
         content:String
+    }
+
+    type Sender{
+        user:Player
     }
 
     type GameRoom {

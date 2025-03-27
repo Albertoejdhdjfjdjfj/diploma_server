@@ -1,5 +1,5 @@
-import { GameRoomModel,GameRoomDocument } from '../../assets/models/GameRoom';
-import { GameModel,GameDocument } from '../../assets/models/Game';
+import { GameRoomModel} from '../../assets/models/GameRoom';
+import { GameRoomDocument } from '../../assets/interfaces/GameRoom';
 import { playersLimit } from '../../assets/variables/variables';
 
 

@@ -1,5 +1,7 @@
-import { GameModel,GameDocument } from '../../assets/models/Game';
-import { GameRoomModel,GameRoomDocument } from '../../assets/models/GameRoom';
+import { GameModel} from '../../assets/models/Game';
+import { GameDocument } from '../../assets/interfaces/Game';
+import { GameRoomDocument } from '../../assets/interfaces/GameRoom';
+import { GameRoomModel} from '../../assets/models/GameRoom';
 import { PubSub, withFilter } from 'graphql-subscriptions';
 import { playersLimit } from '../../assets/variables/variables';
 import { NewMessage,AssignRole } from '../../assets/actions/gameActions';
@@ -55,7 +57,6 @@ const gameResolver = {
                         return false; 
                     }
                     const decodedToken = decodeToken(variables.token); 
-                    console.log(decodedToken.id , payload.message.receiver.playerId)
                     return decodedToken.id === payload.message.receiver.playerId
                 }
             ),

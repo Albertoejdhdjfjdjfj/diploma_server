@@ -1,14 +1,6 @@
-import { Schema ,Document} from "mongoose";
+import { Schema } from "mongoose";
+import { PlayerDocument } from "../interfaces/Player";
 
-
-export interface Player{
-     nickname: string;
-     playerId: string;
-}
-
-export interface PlayerDocument extends Player,Document{
-
-}
 
 export const PlayerSchema: Schema<PlayerDocument> = new Schema<PlayerDocument>({
      nickname: { type: String, required: true }, 
