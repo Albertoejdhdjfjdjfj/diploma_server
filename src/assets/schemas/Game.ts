@@ -4,6 +4,7 @@ import { PlayerSchema } from "../schemas/Player";
 import { MessageSchema } from "../schemas/Message";
 import {GameDocument} from "../interfaces/Game";
 import { GamePhase } from "../enums/GamePhase";
+import { Roles } from "../enums/Roles";
 
 export const GameSchema: Schema<GameDocument> = new Schema<GameDocument>({
      players: [{
@@ -29,6 +30,12 @@ export const GameSchema: Schema<GameDocument> = new Schema<GameDocument>({
          enum: Object.values(GamePhase),
          required: true,
          default: GamePhase.DAY    
+     },
+     order:{
+        type: String,
+        enum: Object.values(Roles),
+        required: true,
+        default: Roles.ADMIN    
      },
      rounds: {
          type: Number,

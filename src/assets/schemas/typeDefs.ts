@@ -13,6 +13,7 @@ const typeDefs = gql`
         joinGameRoom(id:ID!):GameRoom
         leaveGameRoom(id:ID!):GameRoom
         startGame(id:ID!):String
+        sendMessage(id:ID!,content:String):String
     }
 
     type Subscription{

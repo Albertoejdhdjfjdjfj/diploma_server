@@ -108,10 +108,13 @@ const gameRoomResolver = {
                 throw new Error("The Game room does not exist");
             }
     
-            const playerIndex = gameRoom.players.findIndex(player => player.playerId === user.id);
+            let playerIndex = gameRoom.players.findIndex(player => player.playerId === user.id);
     
             if (playerIndex === -1) {
-                throw new Error("You are not in this game room");
+                playerIndex = gameRoom.observers.findIndex(player => player.playerId === user.id);
+                if (playerIndex === -1){
+                    throw new Error("You are not in this game room");
+                }
             }
     
             gameRoom.players.splice(playerIndex, 1);

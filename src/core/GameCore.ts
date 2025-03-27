@@ -1,72 +1,54 @@
-import { NEW_MESSAGE,ASSIGNING_ROLE } from "../assets/actions/actionsTypes";
 import { GameModel} from '../assets/models/Game';
 import { GameDocument } from "../assets/interfaces/Game";
 import { PubSub } from "graphql-subscriptions";
 import { distributeRoles } from "../assets/functions/distributeRoles";
+import { addMessage } from "../assets/functions/addMessage";
+import { publishMessage } from "../assets/functions/publishMessage";
 import {Roles} from "../assets/enums/Roles"
+import { publishRoles } from "../assets/functions/publishRoles";
+import { addRoles } from "../assets/functions/addRoles";
+import { newRound } from "../assets/functions/newRound";
 
-// export async function game(gameId:String):Promise<void>{
+export async function game(gameId: string, pubsub: PubSub):Promise<void>{
+       await startNewRound(gameId,pubsub)
     
-//     let end= false;
-//     while(!end){
-//         startNewRound(gameId)
-//     }
-// }
+}
 
-export async function startNewRound(gameId: String, pubsub: PubSub): Promise<void> {
+export async function startNewRound(gameId: string, pubsub: PubSub): Promise<void> {
     let currentGame: GameDocument | null = await GameModel.findById(gameId);
+
     if(!currentGame){
         return
     }
+
     if(!currentGame.rounds){
-        currentGame = await GameModel.findByIdAndUpdate(gameId, {
-            $push: {
-                chat: {
-                    sender:{
-                             user: {
-                                nickname: "admin",
-                                playerId: "admin"
-                            }
-                    },
-                    receiver:Roles.ALL,
-                    content: "Hello everyone, the game has started and you will be assigned the appropriate role",
-                }, 
-            },
-        }, { new: true }); 
+        currentGame=await addMessage(gameId,"admin","admin",Roles.ALL,"Hello everyone, the game has started and you will be assigned the appropriate role")
+        await publishMessage(gameId,pubsub);
 
         if(!currentGame){
             return
         }
-         
-        for(let player of currentGame.players){
-            await pubsub.publish(NEW_MESSAGE, {message:{receiver:player,chat:currentGame.chat}});
-        }
 
         let roles = distributeRoles(currentGame.players);
-
-        for(let role of roles){
-            await pubsub.publish(ASSIGNING_ROLE, {role:{receiver:role.user,role:role.role}});
-        }
-
-        currentGame = await GameModel.findByIdAndUpdate(gameId, {
-            $push: {
-                roles: roles 
-            },
-        }, { new: true }); 
+        await publishRoles(roles,pubsub);
+        currentGame=await addRoles(gameId,roles)
     }
 
-    currentGame = await GameModel.findByIdAndUpdate(gameId, {
-        $inc: {
-            rounds: 1
-        }
-    }, { new: true });  
+    if(!currentGame){
+        return
+    }
+    currentGame = await newRound(gameId);
 
     if(!currentGame){
         return
     }
 
-    for(let player of currentGame.players){
-        await pubsub.publish(NEW_MESSAGE, {message:{receiver:player,chat:currentGame.chat}});
+    currentGame = await addMessage(gameId,"admin","admin",Roles.ALL,`Round ${currentGame.rounds + 1}`) 
+   
+
+    if(!currentGame){
+        return
     }
-    
+
+    await publishMessage(gameId,pubsub)
 }

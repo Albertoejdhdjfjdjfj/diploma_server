@@ -1,2 +1,5 @@
-export const NEW_MESSAGE = 'NEW_MESSAGE';
-export const ASSIGNING_ROLE = 'ASSIGNING_ROLE'
+import { Message} from '../interfaces/Message'
+import { Player } from '../interfaces/Player'
+
+export type NewMessage = {message:{receiverId:String,chat:Array<Message>}}
+export type AssignRole = {role:{receiverId:String,role:String}}
