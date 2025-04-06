@@ -25,19 +25,22 @@ export const GameSchema: Schema<GameDocument> = new Schema<GameDocument>({
          required: true,
          default: true            
      },
-     currentPhase: {
+     phase: {
          type: String,
-         enum: Object.values(GamePhase),
          required: true,
          default: GamePhase.DAY    
      },
-     order:{
+     roleOrder:{
         type: String,
-        enum: Object.values(Roles),
         required: true,
-        default: Roles.ADMIN    
+        default: ""    
      },
-     rounds: {
+     playerOrder:{
+        type: String,
+        required: true,
+        default: ""    
+     },
+     round: {
          type: Number,
          required: true,
          default: 0               
@@ -49,5 +52,9 @@ export const GameSchema: Schema<GameDocument> = new Schema<GameDocument>({
      winner: [{ 
          type: PlayerSchema,      
          default: []                
+     }],
+     voting:[{
+        type: PlayerSchema,      
+        default: []   
      }]
  });

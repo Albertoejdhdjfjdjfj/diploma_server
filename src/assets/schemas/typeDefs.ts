@@ -14,6 +14,7 @@ const typeDefs = gql`
         leaveGameRoom(id:ID!):GameRoom
         startGame(id:ID!):String
         sendMessage(id:ID!,content:String):String
+        sendSelection(id:ID!,targetId:String):String
     }
 
     type Subscription{

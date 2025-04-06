@@ -1,12 +1,16 @@
-import { decodeToken } from "../../assets/functions/decodeToken";
-module.exports = async (context: any) => {
-     const token = context.req.headers.authorization; 
+import { decodeToken } from "../../assets/functions/helpFunctions/decodeToken";
+import { Request } from "express";
+import { Player } from "../../assets/interfaces/Player";
+import { DecodedToken } from "../../assets/interfaces/DecodedToken";
+
+module.exports = async (context: {req:Request}):Promise<Player|void> => {
+     const token:string|undefined = context.req.headers.authorization; 
  
      if (context.req.body.query.includes('userLogIn')||
         context.req.body.query.includes('getGameRooms')||
         context.req.body.query.includes('getUserInfo') 
         ) {
-         return context;
+         return
      }
  
      if (!token) {
@@ -14,9 +18,8 @@ module.exports = async (context: any) => {
      }
  
      try {
-         const decoded = decodeToken(token)
-         context.user = decoded;
-         return context;
+         const data:DecodedToken = decodeToken(token)
+         return {nickname:data.nickname,playerId:data.userId};
      } catch (error) {
              throw new Error('Incorrect access token');
      }

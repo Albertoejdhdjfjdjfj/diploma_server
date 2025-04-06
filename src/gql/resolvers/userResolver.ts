@@ -34,7 +34,7 @@ const userResolver = {
                    throw new Error('Incorrect password');
               }
               const token = jwt.sign({
-                id: user.id,
+                userId: user.id,
                 email,
                 nickname: user.nickname
               },ACCESS_SECRET);

@@ -1,11 +1,12 @@
 import { Document } from "mongoose";
-import { Role } from "./Role";
+import { Player } from "./Player";
 
 export interface Message {
-     sender:Role,
-     receiver:String
+     sender: Player,
+     receiverRole:string
      content:string,
-     moment:String,
+     phase:string,
+     isSelect:boolean
  }
  
  export interface MessageDocument extends Message, Document {}

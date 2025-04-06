@@ -1,7 +1,7 @@
-import { Role } from '../interfaces/Role';
-import { Player } from '../interfaces/Player';
-import { rolesDistribution } from "../variables/variables";
-import { playersMin } from '../variables/variables';
+import { Role } from '../../interfaces/Role';
+import { Player } from '../../interfaces/Player';
+import { rolesDistribution } from "../../variables/variables";
+import { playersMin } from '../../variables/variables';
 
 export function distributeRoles(players: Player[]): Role[] {
      const playersWithRoles: Array<Role> = [];
@@ -15,10 +15,11 @@ export function distributeRoles(players: Player[]): Role[] {
  
              playersWithRoles.push({ 
                  user: player,
-                 role: role.name,
+                 name: role.name,
                  alive: true,
                  alibi: false,
                  active:true,
+                 treated:false,
              });
  
              availablePlayers.splice(index, 1);

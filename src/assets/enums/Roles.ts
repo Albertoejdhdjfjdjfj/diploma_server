@@ -7,5 +7,6 @@ export enum Roles {
      MANIAC = "maniac",
      ADMIN = "admin",
      DOCTOR = "doctor",
-     ALL = "all"
+     ALL = "all",
+     NOBODY = ""
 }

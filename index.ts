@@ -5,7 +5,6 @@ const { ApolloServer } = require('apollo-server-express');
 const { WebSocketServer } = require('ws');
 const { makeExecutableSchema } = require('@graphql-tools/schema');
 const { useServer } = require('graphql-ws/use/ws');
-const {decodeToken} = require('./src/assets/functions/decodeToken')
 const mongoose = require('mongoose');
 
 require('dotenv').config();

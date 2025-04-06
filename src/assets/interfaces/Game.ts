@@ -10,11 +10,13 @@ export interface Game{
      roles:  Array<Role>;
      observers: Player[];       
      isActive: boolean;         
-     currentPhase: GamePhase; 
-     order:Roles;  
-     rounds: number;  
+     phase: string; 
+     roleOrder:string;  
+     playerOrder:string;
+     round: number;  
      chat:Array<Message>          
-     winner?: Player[];    
+     winner?: Player[];   
+     voting:Array<Player>; 
 }
 
 export interface GameDocument extends Game,Document{
