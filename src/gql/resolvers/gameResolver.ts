@@ -6,18 +6,17 @@ import { PubSub, withFilter } from 'graphql-subscriptions';
 import { playersMin} from '../../assets/variables/variables';
 import { NewMessage,AssignRole } from '../../assets/actions/actionsTypes';
 import { NEW_MESSAGE,ASSIGNING_ROLE } from '../../assets/actions/actionsList';
-import { game } from '../../core/GameCore';
 import { decodeToken } from '../../assets/functions/helpFunctions/decodeToken';
 import { Role } from '../../assets/interfaces/Role';
 import { Roles } from '../../assets/enums/Roles';
-import { addMessage } from '../../assets/functions/dbFunctions/addMessage';
-import { determinateReceiver } from '../../assets/functions/gameFunctions/determinateReceiver';
-import { publishMessage } from '../../assets/functions/publishFunctions/publishMessage';
-import { selectionProcess } from '../../assets/functions/gameFunctions/selectionProcess';
-import { votingProcess } from '../../assets/functions/gameFunctions/votingProcess';
 import { DecodedToken } from '../../assets/interfaces/DecodedToken';
+import { determinateReceiver } from '../../assets/functions/gameFunctions/determinateReceiver';
+import { selectionProcess } from '../../assets/functions/gameFunctions/selectionProcess';
 import { Player } from '../../assets/interfaces/Player';
 import { getPlayerRole } from '../../assets/functions/helpFunctions/getPlayerRole';
+import { GameCore } from '../../core/GameCore';
+import { DBController } from '../../assets/classes/dbController';
+import { PubController } from '../../assets/classes/PubController';
 
 const pubsub = new PubSub();
 
@@ -49,11 +48,11 @@ const gameResolver = {
                       observers: [...gameRoom.observers],
                   });
                   
-                  const savedGame=await startedGame.save();
+                  const savedGame:GameDocument=await startedGame.save();
     
                   // await gameRoom.deleteOne();
-                  game(startedGame.id,pubsub)
-                  return savedGame.id
+
+                  new GameCore(savedGame,pubsub).game()
               } catch (error) {
                   throw new Error((error as Error).message);
               }
@@ -71,18 +70,18 @@ const gameResolver = {
 
                 const playerRole:Role = getPlayerRole(currentGame,player.playerId,"You are not player");
     
-                if(playerRole.name !== currentGame.roleOrder){
-                    throw new Error("It is not your roleOrder to talk");
+                if(playerRole.name !== currentGame.role || playerRole.user.nickname !== currentGame.player){
+                    throw new Error("It is not your order to talk");
                 }
                 
-                const receiver = determinateReceiver(playerRole.name,currentGame.phase,currentGame.roleOrder);
+                const receiver = determinateReceiver(playerRole.name,currentGame.phase,currentGame.role);
 
                 if(receiver === Roles.NOBODY){
                     throw new Error("You can not talk");
                 }
                 
-                await addMessage(currentGame,player,receiver,content,currentGame.phase,false) 
-                await publishMessage(currentGame,pubsub)
+                await DBController.addMessage(currentGame,player,receiver,content,currentGame.phase,false) 
+                await PubController.pubMessage(currentGame,pubsub)
             } catch (error) {
                 throw new Error((error as Error).message);
             }
@@ -98,9 +97,8 @@ const gameResolver = {
                     throw new Error("The Game does not exist");
                 }
 
-                await selectionProcess(currentGame,player.playerId,targetId,pubsub)
-                await votingProcess(currentGame,pubsub)
-                await game(currentGame,pubsub)
+                currentGame=await selectionProcess(currentGame,player.playerId,targetId,pubsub)
+                new GameCore(currentGame,pubsub).game()
             } catch (error) {
                 throw new Error((error as Error).message);
             }

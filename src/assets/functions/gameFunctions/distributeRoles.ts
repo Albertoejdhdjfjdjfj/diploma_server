@@ -17,9 +17,9 @@ export function distributeRoles(players: Player[]): Role[] {
                  user: player,
                  name: role.name,
                  alive: true,
-                 alibi: false,
+                 alibi: 0,
                  active:true,
-                 treated:false,
+                 treated:0,
              });
  
              availablePlayers.splice(index, 1);

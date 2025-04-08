@@ -101,6 +101,19 @@ export class DBController{
           }
 
           currentGame.roles[playerIndex].alive=true;
+          currentGame.roles[playerIndex].treated = currentGame.round;
+
+          return DBController.updateGame(currentGame,errorMessage)      
+     }
+
+     static async setKill(currentGame:GameDocument,playerId:string,errorMessage:string = "The Game does not exist"):Promise<GameDocument>{
+          const playerIndex:number = currentGame.roles.findIndex((role:Role)=>role.user.playerId === playerId);
+
+          if(playerIndex === -1){
+               throw new Error("There is no such player in the game")
+          }
+
+          currentGame.roles[playerIndex].alive=false;
 
           return DBController.updateGame(currentGame,errorMessage)      
      }
