@@ -14,8 +14,8 @@ export async function selectionProcess(currentGame:GameDocument,playerId:string,
      const playerRole:Role = DBController.getPlayerRole(currentGame,playerId,"You are not a player in this game");
      const targetRole:Role = DBController.getPlayerRole(currentGame,targetId,"Target is not a player in this game");
 
-     if(playerRole.user.nickname !== currentGame.playerOrder ||
-        playerRole.name !== currentGame.roleOrder ||
+     if(playerRole.user.nickname !== currentGame.player ||
+        playerRole.name !== currentGame.role ||
         currentGame.phase == GamePhase.DAY
      ){
           throw new Error("You can not select now");
@@ -47,22 +47,7 @@ export async function selectionProcess(currentGame:GameDocument,playerId:string,
                }
 
                case Roles.DOCTOR: {
-                    if(currentGame.roleOrder === Roles.DOCTOR){
-                         if(playerRole.alibi){
-                              currentGame = await addMessage(currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.DOCTOR,`You are blocked, your lover chose you`,GamePhase.NIGHT,true);
-                         }
-                         else{
-                              if(targetRole.name === Roles.DOCTOR && targetRole.treated){
-                                   currentGame = await addMessage(currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.DOCTOR,"You are was treated",GamePhase.NIGHT,true)
-                              }
-                              else{
-                                   currentGame = await addMessage(currentGame,playerRole.user,Roles.DOCTOR,targetRole.user.nickname,GamePhase.NIGHT,true);
-                              }
-                         }
-                    }
-                    else if(currentGame.playerOrder === playerRole.user.nickname){
-                         currentGame.voting.push(targetRole.user)
-                    }
+                    await SelectionController.doctorSelection(currentGame,playerRole,targetRole,pubsub)
                     break;
                }
 

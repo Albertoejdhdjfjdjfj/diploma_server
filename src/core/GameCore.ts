@@ -3,10 +3,10 @@ import { GameDocument } from "../assets/interfaces/Game";
 import { Roles } from "../assets/enums/Roles";
 import { PubSub } from "graphql-subscriptions";
 import { DBController } from "../assets/classes/dbController";
-import { PubController } from "../assets/classes/pubController";
+import { PubController } from "../assets/classes/PubController";
 import { distributeRoles } from "../assets/functions/gameFunctions/distributeRoles";
-import { nextRoleOrder } from "../assets/functions/gameFunctions/nextRoleOrder";
-import { nextPlayerOrder } from "../assets/functions/gameFunctions/nextPlayerOrder";
+import { nextRole } from "../assets/functions/gameFunctions/nextRole";
+import { nextPlayer } from "../assets/functions/gameFunctions/nextPlayer";
 import { Role } from "../assets/interfaces/Role";
 import { determinateKilled } from "../assets/functions/gameFunctions/determinateKilled";
 
@@ -26,10 +26,10 @@ export class GameCore{
         if(this.currentGame.phase === GamePhase.NIGHT){
             await this.nightPhase();
         }
-        if(this.currentGame.phase === GamePhase.DAY && !this.currentGame.roleOrder && !this.currentGame.playerOrder){
+        if(this.currentGame.phase === GamePhase.DAY && !this.currentGame.role && !this.currentGame.player){
             await this.dayPhase();
         }
-        if(this.currentGame.phase === GamePhase.VOTING && !this.currentGame.roleOrder && !this.currentGame.playerOrder){
+        if(this.currentGame.phase === GamePhase.VOTING && !this.currentGame.role && !this.currentGame.player){
            await this.votingPhase();
         }
         
@@ -53,42 +53,43 @@ export class GameCore{
 
     private async nightPhase():Promise<void>{
         if(
-            this.currentGame.roleOrder === Roles.NOBODY &&
-            this.currentGame.playerOrder === Roles.NOBODY 
+            this.currentGame.role === Roles.NOBODY &&
+            this.currentGame.player === Roles.NOBODY 
         )
         {
             this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,`The city is falling asleep`,GamePhase.NIGHT,false);
             await PubController.pubMessage(this.currentGame,this.pubsub) 
         }
 
-        const lastRole:string = this.currentGame.roleOrder;
-        const nextRole:string = nextRoleOrder(this.currentGame);
+        const currentRole:string = this.currentGame.role;
+        let nextRoleInLine:string = nextRole(this.currentGame);
+        
+        this.currentGame = await DBController.setRole(this.currentGame,nextRoleInLine)
 
-        if(nextRole === Roles.NOBODY){
-            this.currentGame=await DBController.setPhase(this.currentGame,GamePhase.NIGHT);
-            this.currentGame = await DBController.setRoleOrder(this.currentGame,nextRole);
-            this.currentGame = await DBController.setPlayerOrder(this.currentGame,Roles.NOBODY);
+        if(nextRoleInLine === Roles.NOBODY){
+            this.currentGame=await DBController.setPhase(this.currentGame,GamePhase.DAY);
+            this.currentGame = await DBController.setPlayer(this.currentGame,Roles.NOBODY);
         }
 
-        const nextPlayer:string = nextPlayerOrder(this.currentGame);
+        const nextPlayerInLine:string = nextPlayer(this.currentGame);
 
-        if(nextPlayer===Roles.NOBODY){
+        if(nextPlayerInLine===Roles.NOBODY){
             this.currentGame = await DBController.cleanVoting(this.currentGame);
         }
 
-        this.currentGame = await DBController.setPlayerOrder(this.currentGame,nextPlayer);
+        this.currentGame = await DBController.setPlayer(this.currentGame,nextPlayerInLine);
 
-        if(lastRole!==nextRole){  
-            switch(this.currentGame.roleOrder){
-                case Roles.LOVER: {this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,"The lover is waking up",GamePhase.NIGHT,false);break;}
-                case Roles.MAFIA: {this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,"The mafia is waking up",GamePhase.NIGHT,false);break;}
-                case Roles.DON: {this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,"The don is waking up",GamePhase.NIGHT,false);break;}
-                case Roles.SHERIFF: {this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,"The sheriff is waking up",GamePhase.NIGHT,false);break;}
-                case Roles.DOCTOR: {this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,"The doctor is waking up",GamePhase.NIGHT,false);break;}
-                case Roles.MANIAC: {this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,"The maniak is waking up",GamePhase.NIGHT,false);break;}
-            }
-            await PubController.pubMessage(this.currentGame,this.pubsub) 
+        if(currentRole!==nextRoleInLine){    
+          this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,`The ${nextRoleInLine} is waking up`,GamePhase.NIGHT,false);
+          await PubController.pubMessage(this.currentGame,this.pubsub) 
         }
+            
+        const candiateRole:Role|undefined = this.currentGame.roles.find((role:Role)=>role.name === nextRoleInLine);
+
+        if(candiateRole && (candiateRole.alibi === this.currentGame.round)){
+            this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},candiateRole.name,"You are blocked, your lover chose you",GamePhase.NIGHT,false);
+            this.nightPhase()
+        }        
     }
 
     private async dayPhase():Promise<void>{
@@ -110,11 +111,12 @@ export class GameCore{
     }
 
     private async votingPhase():Promise<void>{ 
-        const nextPlayer:string = nextPlayerOrder(this.currentGame);
+        const nextPlayerInLine:string = nextPlayer(this.currentGame);
 
-        this.currentGame = await DBController.setPlayerOrder(this.currentGame,nextPlayer);
+        this.currentGame = await DBController.setPlayer(this.currentGame,nextPlayerInLine);
 
-        if(nextPlayer === Roles.NOBODY){
+        if(nextPlayerInLine === Roles.NOBODY){
+            
             this.currentGame=await DBController.setPhase(this.currentGame,GamePhase.NIGHT); 
             await this.startNewRound()           
         }else{

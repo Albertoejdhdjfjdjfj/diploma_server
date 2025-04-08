@@ -11,8 +11,8 @@ export interface Game{
      observers: Player[];       
      isActive: boolean;         
      phase: string; 
-     roleOrder:string;  
-     playerOrder:string;
+     role:string;  
+     player:string;
      round: number;  
      chat:Array<Message>          
      winner?: Player[];   

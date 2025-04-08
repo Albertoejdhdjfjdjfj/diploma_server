@@ -30,12 +30,12 @@ export const GameSchema: Schema<GameDocument> = new Schema<GameDocument>({
          required: true,
          default: GamePhase.DAY    
      },
-     roleOrder:{
+     role:{
         type: String,
         required: true,
         default: ""    
      },
-     playerOrder:{
+     player:{
         type: String,
         required: true,
         default: ""    

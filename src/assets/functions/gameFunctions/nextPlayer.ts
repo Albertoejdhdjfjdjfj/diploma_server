@@ -4,13 +4,13 @@ import { Role } from "../../interfaces/Role";
 import { Player } from "../../interfaces/Player";
 
 
-export function nextPlayerOrder(currentGame: GameDocument):string {
+export function nextPlayer(currentGame: GameDocument):string {
 
-    if (currentGame.roleOrder === Roles.MAFIA) {
+    if (currentGame.role === Roles.MAFIA) {
         const mafia: Array<Role> = currentGame.roles.filter((role: Role) => role.name === Roles.MAFIA || role.name === Roles.DON);
 
         if (mafia.length !== currentGame.voting.length) {
-            const playerIndex = mafia.findIndex((role: Role) => role.user.nickname === currentGame.playerOrder);
+            const playerIndex = mafia.findIndex((role: Role) => role.user.nickname === currentGame.player);
             return mafia[playerIndex].user.nickname;
         }
 
@@ -19,7 +19,7 @@ export function nextPlayerOrder(currentGame: GameDocument):string {
         
     
     
-    const playerIndex: number = currentGame.players.findIndex((player: Player) => player.nickname === currentGame.roleOrder);
+    const playerIndex: number = currentGame.players.findIndex((player: Player) => player.nickname === currentGame.role);
     
     if (playerIndex >= currentGame.players.length - 1) {
         return Roles.NOBODY

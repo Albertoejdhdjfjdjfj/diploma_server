@@ -5,9 +5,9 @@ export interface Role{
      user: Player;
      name: string;
      alive: boolean;
-     alibi:boolean;
+     alibi:number;
      active:boolean;
-     treated:boolean;
+     treated:number;
  };
 
  export interface RoleDocument extends Role, Document{

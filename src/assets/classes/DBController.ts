@@ -39,13 +39,13 @@ export class DBController{
           return DBController.updateGame(currentGame,errorMessage)      
      }
 
-     static async setPlayerOrder(currentGame:GameDocument,playerId:string,errorMessage:string = "The Game does not exist"):Promise<GameDocument>{
-          currentGame.playerOrder = playerId;
+     static async setPlayer(currentGame:GameDocument,player:string,errorMessage:string = "The Game does not exist"):Promise<GameDocument>{
+          currentGame.player = player;
           return DBController.updateGame(currentGame,errorMessage)      
      }
 
-     static async setRoleOrder(currentGame:GameDocument,role:string,errorMessage:string = "The Game does not exist"):Promise<GameDocument>{
-          currentGame.roleOrder = role;
+     static async setRole(currentGame:GameDocument,role:string,errorMessage:string = "The Game does not exist"):Promise<GameDocument>{
+          currentGame.role = role;
           return DBController.updateGame(currentGame,errorMessage)      
      }
 
@@ -78,9 +78,9 @@ export class DBController{
      static async addAlibi(currentGame:GameDocument,playerId:string,errorMessage:string = "The Game does not exist"):Promise<GameDocument>{
           const playerIndex:number = currentGame.roles.findIndex((role:Role)=>role.user.playerId === playerId)
           if(playerIndex === -1){
-               throw new Error("The  not a player in this game")
+               throw new Error("There is no such player in the game")
           }
-          currentGame.roles[playerIndex].alibi=true;
+          currentGame.roles[playerIndex].alibi=currentGame.round;
      
           return DBController.updateGame(currentGame,errorMessage)
      }
@@ -91,5 +91,17 @@ export class DBController{
                throw new Error(errorMessage);
           }
           return playerRole
+     }
+
+     static async setCure(currentGame:GameDocument,playerId:string,errorMessage:string = "The Game does not exist"):Promise<GameDocument>{
+          const playerIndex:number = currentGame.roles.findIndex((role:Role)=>role.user.playerId === playerId);
+
+          if(playerIndex === -1){
+               throw new Error("There is no such player in the game")
+          }
+
+          currentGame.roles[playerIndex].alive=true;
+
+          return DBController.updateGame(currentGame,errorMessage)      
      }
 }

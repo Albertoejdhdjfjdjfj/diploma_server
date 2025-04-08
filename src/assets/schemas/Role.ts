@@ -7,7 +7,7 @@ import { PlayerSchema } from "./Player";
     user: { type: PlayerSchema, required: true }, 
     name: { type: String, required: true }, 
     alive: { type: Boolean, required: true, default: true}, 
-    alibi: { type: Boolean, required: true, default: false}, 
+    alibi: { type: Number, required: true, default: 0}, 
     active: { type: Boolean, required: true, default: true},
-    treated:{ type: Boolean, required: true, default: false },
+    treated:{ type: Number, required: true, default: 0}
  })
