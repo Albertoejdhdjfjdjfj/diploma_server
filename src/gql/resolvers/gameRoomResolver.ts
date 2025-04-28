@@ -1,7 +1,11 @@
 import { GameRoomModel} from '../../assets/models/GameRoom';
 import { GameRoomDocument } from '../../assets/interfaces/GameRoom';
 import { playersMax,playersMin } from '../../assets/variables/variables';
+import { Player } from '../../assets/interfaces/Player';
+import { PubSub,withFilter } from 'graphql-subscriptions';
+import { UPDATE_GAME_ROOM } from '../../assets/actions/actionsList';
 
+const pubsub = new PubSub();
 
 const gameRoomResolver = {
     Query: {   
@@ -27,43 +31,40 @@ const gameRoomResolver = {
       }     
     },
     Mutation: {
-      createGameRoom:async(_: any, args:any,context:any): Promise<GameRoomDocument> =>{
+      createGameRoom:async(_: any, args:any,player:Player): Promise<GameRoomDocument> =>{
         try {
-        const {user}=context;
         const {name}=args;
-        const userGames:GameRoomDocument|null = await GameRoomModel.findOne({
-          $or: [
-              { "creator.creatorId": user.id },
-              { name: name }
-          ]});
+        const userGames:GameRoomDocument|null = await GameRoomModel.findOne({ "creator.playerId": player.playerId });
 
         if(userGames){
-          throw new Error('You already have an active game room')
+          throw new Error('You already have an game room ')
         }
 
-        const newGame = new GameRoomModel({name:name, creator:{creatorId:user.id,nickname:user.nickname}});
-        await newGame.save();
+        const newGame = new GameRoomModel({name:name, creator:{playerId:player.playerId,nickname:player.nickname}});
+        const savedGame =  await newGame.save();
+        pubsub.publish(UPDATE_GAME_ROOM, { updatedGameRoom: savedGame });
         return newGame;
-      } catch (error) {
+       }
+        catch (error) {
         throw new Error((error as Error).message);
-    }
+       }
       },
-      joinGameRoom: async (_: any, args: any, context: any): Promise<GameRoomDocument> => {
+      joinGameRoom: async (_: any, args: any, player: Player): Promise<GameRoomDocument> => {
         try {
-            const { user } = context; 
             const { id } = args; 
 
             const gameRoom: GameRoomDocument | null = await GameRoomModel.findById(id);
+            
             if (!gameRoom) {
                 throw new Error("The Game room does not exist");
             }
     
             const userGames: GameRoomDocument | null = await GameRoomModel.findOne({
-                "creator.creatorId": user.id,
+                "creator.playerId": player.playerId,
             });
     
             const joinGames: GameRoomDocument | null = await GameRoomModel.findOne({
-                "players.playerId": user.id
+                "players.playerId": player.playerId
             });
     
             // if (userGames && userGames.id !== gameRoom.id || joinGames) {
@@ -77,8 +78,8 @@ const gameRoomResolver = {
             
             if(gameRoom.players.length>=playersMax){
             gameRoom.observers.push({
-                playerId: user.id,
-                nickname: user.nickname 
+                playerId: player.playerId,
+                nickname: player.nickname 
             })
             
             const updatedGameRoom = await gameRoom.save();
@@ -86,12 +87,13 @@ const gameRoomResolver = {
             }
 
             gameRoom.players.push({
-                playerId: user.id,
-                nickname: user.nickname 
+                playerId: player.playerId,
+                nickname: player.nickname 
             });
 
-            const updatedGameRoom = await gameRoom.save();
-            return updatedGameRoom; 
+            const savedGameRoom = await gameRoom.save();
+            pubsub.publish(UPDATE_GAME_ROOM, { updatedGameRoom: savedGameRoom });
+            return savedGameRoom; 
         } catch (error) {
             throw new Error((error as Error).message);
         }
@@ -120,13 +122,20 @@ const gameRoomResolver = {
             gameRoom.players.splice(playerIndex, 1);
     
             const updatedGameRoom = await gameRoom.save();
-    
+            pubsub.publish(UPDATE_GAME_ROOM, { updatedGameRoom: updatedGameRoom });
             return updatedGameRoom; 
         } catch (error) {
             throw new Error((error as Error).message);
         }
      }
-   }
+   },
+    Subscription: {
+        updatedGameRoom:{
+            subscribe: () => pubsub.asyncIterableIterator(UPDATE_GAME_ROOM),
+          },
+        
+    }    
+
 };
 
-module.exports = gameRoomResolver;
+module.exports = gameRoomResolver; 

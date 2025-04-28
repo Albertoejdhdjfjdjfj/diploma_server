@@ -12,17 +12,17 @@ import { SelectionController } from "../../classes/selectionController";
 export async function selectionProcess(currentGame:GameDocument,playerId:string,targetId:string,pubsub:PubSub):Promise<GameDocument>{
 
      const playerRole:Role = DBController.getPlayerRole(currentGame,playerId,"You are not a player in this game");
-     const targetRole:Role|undefined = currentGame.roles.find((role:Role)=>role.user.playerId === playerId);
+     const targetRole:Role|undefined = currentGame.roles.find((role:Role)=>role.user.playerId === targetId);
 
-     if(playerRole.user.nickname !== currentGame.player ||
+     if(!(playerRole.user.nickname !== currentGame.player ||
         playerRole.name !== currentGame.role ||
-        currentGame.phase == GamePhase.DAY
+        currentGame.phase == GamePhase.DAY)
      ){
           throw new Error("You can not select now");
      }
      
      if(targetRole && !targetValidator(playerRole.name,targetRole.name,currentGame.phase)){
-          throw new Error("You can not select this target");
+          throw new Error("You can not select this target"); 
      }
     
      switch(playerRole.name){

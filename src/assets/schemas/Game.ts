@@ -13,7 +13,6 @@ export const GameSchema: Schema<GameDocument> = new Schema<GameDocument>({
      }],
      roles: [{
          type: RoleSchema,      
-         required: true,
          default:[]
      }],
      observers: [{
@@ -22,27 +21,22 @@ export const GameSchema: Schema<GameDocument> = new Schema<GameDocument>({
      }],
      isActive: {
          type: Boolean,
-         required: true,
          default: true            
      },
      phase: {
          type: String,
-         required: true,
-         default: GamePhase.DAY    
+         default: GamePhase.VOTING    
      },
      role:{
         type: String,
-        required: true,
         default: ""    
      },
      player:{
         type: String,
-        required: true,
         default: ""    
      },
      round: {
          type: Number,
-         required: true,
          default: 0               
      },
      chat:[{

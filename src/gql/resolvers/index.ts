@@ -13,6 +13,7 @@ module.exports = {
           ...gameResolver.Mutation
      },
      Subscription:{
-          ...gameResolver.Subscription
+          ...gameResolver.Subscription,
+          ...gameRoomResolver.Subscription
      }
 }

@@ -21,7 +21,7 @@ export class GameCore{
 
     async game():Promise<void>{
         if(!this.currentGame.round){
-            this.startNewRound()
+            await this.startNewRound()
         }
         if(this.currentGame.phase === GamePhase.NIGHT){
             await this.nightPhase();
@@ -47,7 +47,7 @@ export class GameCore{
     
         this.currentGame = await DBController.newRound(this.currentGame);
         this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,`Round ${this.currentGame.round}`,GamePhase.VOTING,false) 
-       
+        this.currentGame = await DBController.setPhase(this.currentGame,GamePhase.NIGHT);
         await PubController.pubMessage(this.currentGame,this.pubsub) 
     }
 

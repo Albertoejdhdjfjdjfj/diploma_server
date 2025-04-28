@@ -2,10 +2,11 @@ import express, { Express } from "express";
 const http = require('http');
 const cors = require('cors');
 const { ApolloServer } = require('apollo-server-express');
-const { WebSocketServer } = require('ws');
+import { execute,subscribe } from "graphql";
+import { SubscriptionServer } from 'subscriptions-transport-ws'
 const { makeExecutableSchema } = require('@graphql-tools/schema');
-const { useServer } = require('graphql-ws/use/ws');
 const mongoose = require('mongoose');
+
 
 require('dotenv').config();
 const PORT = process.env.PORT;
@@ -17,29 +18,53 @@ const context = require('./src/gql/middleware/auth')
 
 const app: Express = express();
 
-app.use(cors());
+app.use(cors({
+    origin: '*'
+}));
 app.use(express.json());
  
 const httpServer = http.createServer(app);
 
-const wsServer = new WebSocketServer({
-    server: httpServer,
-    path: '/graphql',
-});
-
 const schema = makeExecutableSchema({ typeDefs, resolvers });
-const server = new ApolloServer({ 
+
+ const server = new ApolloServer({ 
     schema,
+    plugins: [{
+        async serverWillStart() {
+          return {
+            async drainServer() {
+              subscriptionServer.close()
+            }
+          }
+        }
+    }],
     context:context,
+    engine: false,
     formatError: (error:Error) => {
         return new Error(error.message);
     },
  });
+ const connectedClients = new Set();
+
+ const subscriptionServer = SubscriptionServer.create({
+     schema,
+     execute,
+     subscribe
+ }, {
+     server: httpServer,
+     path: '/subscriptions',
+     onConnect: (connectionParams: any, webSocket: any): void => {
+         connectedClients.add(webSocket);
+         console.log('Client connected. Total connected clients:', connectedClients.size);
+     },
+     onDisconnect: (webSocket: any): void => {
+         connectedClients.delete(webSocket);
+         console.log('Client disconnected. Total connected clients:', connectedClients.size);
+     }
+ });
 
 const start = async () => {
     try {
-        useServer({ schema }, wsServer);
-        
         await server.start();
         server.applyMiddleware({ app }); 
 

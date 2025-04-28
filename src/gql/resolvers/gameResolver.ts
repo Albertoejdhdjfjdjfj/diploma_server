@@ -25,7 +25,7 @@ const gameResolver = {
      
     },
     Mutation: {
-      startGame: async (_: any, args: any, player: Player): Promise<void> => {
+      startGame: async(_: any, args:any,player:Player): Promise<void> => {
               try {
                   const { id } = args; 
           
@@ -34,8 +34,9 @@ const gameResolver = {
                   if (!gameRoom) {
                       throw new Error("The Game room does not exist");
                   }
-      
-                  if(player.playerId!== gameRoom.creator.creatorId){
+                  
+
+                  if(player.playerId!== gameRoom.creator.playerId){
                       throw new Error("You are not creator of this game");
                   }
       
@@ -44,6 +45,7 @@ const gameResolver = {
                   }
           
                   const startedGame:GameDocument = new GameModel({
+
                       players: [...gameRoom.players],
                       observers: [...gameRoom.observers],
                   });
@@ -54,16 +56,17 @@ const gameResolver = {
 
                   new GameCore(savedGame,pubsub).game()
               } catch (error) {
-                  throw new Error((error as Error).message);
+                  throw new Error((error as Error).message); 
               }
           },
 
-          sendMessage: async (_: any, args: {id:string,content:string}, player: Player): Promise<void> => {
+          sendMessage: async (_: any, args: {content:string}, player: Player): Promise<void> => {
             try {
-                const { id,content } = args; 
-        
-                const currentGame: GameDocument | null = await GameModel.findById(id);
-    
+                const { content } = args; 
+                const currentGame: GameDocument | null = await GameModel.findOne({
+                    players: { playerId: player.playerId } 
+                }).exec();
+
                 if (!currentGame) {
                     throw new Error("The Game does not exist");
                 }
@@ -87,12 +90,14 @@ const gameResolver = {
             }
           },
 
-          sendSelection: async (_: any, args: {id:string,targetId:string}, player: Player): Promise<void> => {
+          sendSelection: async (_: any, args: {targetId:string}, player: Player): Promise<void> => {
             try {
-                const { id,targetId} = args; 
-        
-                let currentGame: GameDocument | null = await GameModel.findById(id);
-    
+                const { targetId } = args; 
+                console.log(player)
+                let currentGame: GameDocument | null = await GameModel.findOne({
+                    players: { $elemMatch: { playerId: player.playerId }}
+                });
+
                 if (!currentGame) {
                     throw new Error("The Game does not exist");
                 }
@@ -103,34 +108,36 @@ const gameResolver = {
                 throw new Error((error as Error).message);
             }
           }
-     }, 
+    }, 
      Subscription: {
         message: {
             subscribe: withFilter<NewMessage>(
                 () => pubsub.asyncIterableIterator(NEW_MESSAGE),
-                (payload: NewMessage | undefined, variables) => {
+                (payload: NewMessage | undefined, variables:{token:string}) => {
                     if (!payload) {
                         return false; 
                     }
-                    const decodedToken:DecodedToken = decodeToken(variables.token); 
-                    return decodedToken.userId === payload.message.receiverId
+
+                    const token=variables.token.split(' ')[1];
+                    const data = decodeToken(token)
+                    return data.userId === payload.message.receiverId   
                 }
             ),
         },
         role: {
             subscribe: withFilter<AssignRole>(
                 () => pubsub.asyncIterableIterator(ASSIGNING_ROLE),
-                (payload: AssignRole|undefined, variables) => {
+                (payload: AssignRole|undefined, variables:{token:string}) => {
                     if (!payload) {
                         return false; 
                     }
-                    const decodedToken:DecodedToken = decodeToken(variables.token); 
-                    return decodedToken.userId === payload.role.receiverId
+
+                    const token=variables.token.split(' ')[1];
+                    const data = decodeToken(token)
+                    return data.userId === payload.role.receiverId 
                 }
             ),
         },
-
-
     }, 
 };
 

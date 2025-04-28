@@ -33,35 +33,36 @@ const userResolver = {
               if (!validPassword) {
                    throw new Error('Incorrect password');
               }
-              const token = jwt.sign({
+              const token:string = jwt.sign({
                 userId: user.id,
                 email,
                 nickname: user.nickname
               },ACCESS_SECRET);
 
-              return {user,token}
+              return {user,token:"Bearer " + token}
             } catch (error) { 
                 throw new Error((error as Error).message); 
             } 
           },
     },
     Mutation: {
-     userSignUp: async (_: any, { input }: {input:UserDocument}) => {
+     userSignUp: async (_: any, args:any) => {
           try {
+            const {nickname,email,password}=args;
             
-            if(!validator.isEmail(input.email)){
-                throw new Error('Invalid email');
-            }
+            // if(!validator.isEmail(input.email)){
+            //     throw new Error('Invalid email');
+            // }
 
             const existingUser = await UserModel.findOne({
-                $or: [{ nickname: input.nickname }, { email: input.email }]
+                $or: [{ nickname: nickname }, { email: email }]
             });
 
             if (existingUser) {
                 throw new Error('Nickname or email already in use');
             }
-            const hashedPassword = await bcrypt.hash(input.password, 10);
-            const newUser = new UserModel({ ...input, password: hashedPassword });
+            const hashedPassword = await bcrypt.hash(password, 10);
+            const newUser = new UserModel({ ...args, password: hashedPassword });
             const savedUser = await newUser.save();
             return savedUser; 
           } catch (error) { 

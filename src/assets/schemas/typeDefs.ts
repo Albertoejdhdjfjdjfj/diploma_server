@@ -8,18 +8,19 @@ const typeDefs = gql`
     }
 
     type Mutation {
-        userSignUp(input: UserSignUpInput): User
+        userSignUp( nickname: String!,email: String!,password: String!): User
         createGameRoom(name: String!): GameRoom
         joinGameRoom(id:ID!):GameRoom
         leaveGameRoom(id:ID!):GameRoom
         startGame(id:ID!):String
-        sendMessage(id:ID!,content:String):String
-        sendSelection(id:ID!,targetId:String):String
+        sendMessage(content:String):String
+        sendSelection(targetId:String):String
     }
 
     type Subscription{
         message(token:String): MessageResponse
         role(token:String): RoleResponse
+        updatedGameRoom: GameRoom
     }
     
     type RoleResponse {
@@ -30,7 +31,7 @@ const typeDefs = gql`
     type MessageResponse {
         receiver:Player,
         chat: [Message!]!,
-    }
+    }   
 
     type Message {
         sender: Sender,
@@ -44,13 +45,9 @@ const typeDefs = gql`
     type GameRoom {
         id: ID!,
         name: String!,
-        creator: Creator!,
-        players: [Player!]!
-    }
-
-    type Creator{
-       creatorId: String, 
-       nickname: String
+        creator: Player!,
+        players: [Player!]!,
+        observers:[Player!]!
     }
 
     type Player{
@@ -64,7 +61,6 @@ const typeDefs = gql`
         email: String,
     }
 
-     
     type UserInfo {
         id: ID,
         nickname: String,
@@ -73,12 +69,6 @@ const typeDefs = gql`
     type LoginPayload {
         user: User!,
         token: String!
-    }
-
-    input UserSignUpInput {
-        nickname: String!,
-        email: String!,
-        password: String!
     }
 `;
 

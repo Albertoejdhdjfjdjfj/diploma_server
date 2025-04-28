@@ -1,10 +1,9 @@
 import { Document } from "mongoose";
 import { Player } from "../interfaces/Player"
-import {Creator} from '../interfaces/Creator'
 
 export interface GameRoom {
     name: string;
-    creator: Creator;  
+    creator: Player;  
     players: Array<Player>;
     observers: Array<Player>;
 }

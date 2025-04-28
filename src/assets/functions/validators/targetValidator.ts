@@ -2,6 +2,7 @@ import { GamePhase } from "../../enums/GamePhase";
 import { Roles } from "../../enums/Roles";
 
 export function targetValidator(playerRole:string,targetRole:string,phase:string):boolean{
+     console.log(playerRole,targetRole)
      switch(playerRole){
           case Roles.LOVER: return (targetRole !== Roles.LOVER)?true:false;
           case Roles.MAFIA: return (targetRole !== Roles.MAFIA && targetRole!==Roles.DON)?true:(phase == GamePhase.VOTING)?true:false;
