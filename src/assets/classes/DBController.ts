@@ -17,84 +17,97 @@ export class DBController{
           return updatedGame; 
      }
 
-     static async addMessage(currentGame:GameDocument,sender:Player,receiverRole:string,content:string,phase:string=GamePhase.DAY,isSelect:boolean=false,errorMessage:string = "The Game does not exist"):Promise<GameDocument>{
+     static async deleteGame(currentGame: GameDocument, delay: number = 0): Promise<void> {
+          await new Promise(resolve => setTimeout(resolve, delay));
+          await GameModel.findByIdAndDelete(currentGame.id);   
+      }
+
+     static async addMessage(currentGame: GameDocument, sender: Player, receiverRole: string, content: string, delay: number = 0): Promise<GameDocument> {
+          await new Promise(resolve => setTimeout(resolve, delay));
+      
           currentGame.chat.push({
-             sender:sender,
-             receiverRole:receiverRole,
-             content:content,
-             phase:phase,
-             isSelect:isSelect
-          })
-     
-          return DBController.updateGame(currentGame,errorMessage)      
-     }
+              sender: sender,
+              receiverRole: receiverRole,
+              content: content,
+              phase: currentGame.phase
+          });
+      
+          return DBController.updateGame(currentGame);
+      }
 
-     static async setRoles(currentGame:GameDocument,roles:Array<Role>,errorMessage:string = "The Game does not exist"):Promise<GameDocument>{
+     static async setRoles(currentGame:GameDocument,roles:Array<Role>):Promise<GameDocument>{
          currentGame.roles=roles
-         return DBController.updateGame(currentGame,errorMessage)      
+         return DBController.updateGame(currentGame)      
      }
 
-     static async newRound(currentGame:GameDocument,errorMessage:string = "The Game does not exist"):Promise<GameDocument>{
+     static async newRound(currentGame:GameDocument):Promise<GameDocument>{
           currentGame.round = currentGame.round+1;
-          return DBController.updateGame(currentGame,errorMessage)      
+          return DBController.updateGame(currentGame)      
      }
 
-     static async setPlayer(currentGame:GameDocument,player:string,errorMessage:string = "The Game does not exist"):Promise<GameDocument>{
-          currentGame.player = player;
-          return DBController.updateGame(currentGame,errorMessage)      
+     static async setPlayerInLine(currentGame:GameDocument,player:Player|null):Promise<GameDocument>{
+          currentGame.playerInLine = player;
+          return DBController.updateGame(currentGame);      
      }
 
-     static async setRole(currentGame:GameDocument,role:string,errorMessage:string = "The Game does not exist"):Promise<GameDocument>{
-          currentGame.role = role;
-          return DBController.updateGame(currentGame,errorMessage)      
+     static async setRoleInLine(currentGame:GameDocument,role:string):Promise<GameDocument>{
+          currentGame.roleInLine = role;
+          return DBController.updateGame(currentGame)      
      }
 
-     static async setPhase(currentGame:GameDocument,phase:string,errorMessage:string = "The Game does not exist"):Promise<GameDocument>{
+     static async setPhase(currentGame:GameDocument,phase:string):Promise<GameDocument>{
           currentGame.phase = phase;
-          return DBController.updateGame(currentGame,errorMessage)      
+          return DBController.updateGame(currentGame)      
      }
 
-     static async cleanVoting(currentGame:GameDocument,errorMessage:string = "The Game does not exist"):Promise<GameDocument>{
+     static async cleanVoting(currentGame:GameDocument):Promise<GameDocument>{
           currentGame.voting=[];
-          return DBController.updateGame(currentGame,errorMessage)      
+          return DBController.updateGame(currentGame)      
      }
 
-     static async addVote(currentGame:GameDocument,player:Player,errorMessage:string = "The Game does not exist"):Promise<GameDocument>{
+     static async addVote(currentGame:GameDocument,player:Player):Promise<GameDocument>{
           currentGame.voting.push(player)
-          return DBController.updateGame(currentGame,errorMessage)      
+          return DBController.updateGame(currentGame)      
      }
 
-     static async deletePlayer(currentGame:GameDocument,playerId:string,errorMessage:string = "The Game does not exist"):Promise<GameDocument>{
-         currentGame.roles = currentGame.roles.filter((role:Role)=>role.user.playerId !== playerId);
+     static async deletePlayer(currentGame:GameDocument,playerId:string):Promise<GameDocument>{
+         currentGame.roles = currentGame.roles.filter((role:Role)=>role.player.playerId !== playerId);
          currentGame.players = currentGame.players.filter((player:Player)=>player.playerId !== playerId);
-         return DBController.updateGame(currentGame,errorMessage)
+         return DBController.updateGame(currentGame)
      }
 
-     static async addPlayerToObservers(currentGame:GameDocument,player:Player,errorMessage:string = "The Game does not exist"):Promise<GameDocument>{
+     static async addPlayerToObservers(currentGame:GameDocument,player:Player):Promise<GameDocument>{
           currentGame.observers.push(player);
-          return DBController.updateGame(currentGame,errorMessage)
+          return DBController.updateGame(currentGame)
      }
      
-     static async addAlibi(currentGame:GameDocument,playerId:string,errorMessage:string = "The Game does not exist"):Promise<GameDocument>{
-          const playerIndex:number = currentGame.roles.findIndex((role:Role)=>role.user.playerId === playerId)
+     static async addAlibi(currentGame:GameDocument,playerId:string):Promise<GameDocument>{
+          const playerIndex:number = currentGame.roles.findIndex((role:Role)=>role.player.playerId === playerId)
           if(playerIndex === -1){
                throw new Error("There is no such player in the game")
           }
           currentGame.roles[playerIndex].alibi=currentGame.round;
      
-          return DBController.updateGame(currentGame,errorMessage)
+          return DBController.updateGame(currentGame)
      }
 
-     static getPlayerRole(currentGame:GameDocument,playerId:string,errorMessage:string = "The Game does not exist"):Role{
-          const playerRole:Role|undefined = currentGame.roles.find((role:Role)=>role.user.playerId === playerId);
-          if(!playerRole){
-               throw new Error(errorMessage);
-          }
+     static getPlayerRoleById(currentGame:GameDocument,playerId:string):Role|undefined{
+          const playerRole:Role|undefined = currentGame.roles.find((role:Role)=>role.player.playerId === playerId);
           return playerRole
      }
 
-     static async setCure(currentGame:GameDocument,playerId:string,errorMessage:string = "The Game does not exist"):Promise<GameDocument>{
-          const playerIndex:number = currentGame.roles.findIndex((role:Role)=>role.user.playerId === playerId);
+     static getPlayerById(currentGame:GameDocument,playerId:string):Player|undefined{
+          const player:Player|undefined = currentGame.players.find((pl:Player)=>pl.playerId === playerId)
+          return player;
+     }
+
+     static getPlayerByName(currentGame:GameDocument,playerName:string):Player|undefined{
+          const player:Player|undefined = currentGame.players.find((pl:Player)=>pl.nickname === playerName)
+          return player;
+     }
+
+     static async setCure(currentGame:GameDocument,playerId:string):Promise<GameDocument>{
+          const playerIndex:number = currentGame.roles.findIndex((role:Role)=>role.player.playerId === playerId);
 
           if(playerIndex === -1){
                throw new Error("There is no such player in the game")
@@ -103,18 +116,17 @@ export class DBController{
           currentGame.roles[playerIndex].alive=true;
           currentGame.roles[playerIndex].treated = currentGame.round;
 
-          return DBController.updateGame(currentGame,errorMessage)      
+          return DBController.updateGame(currentGame)      
      }
 
-     static async setKill(currentGame:GameDocument,playerId:string,errorMessage:string = "The Game does not exist"):Promise<GameDocument>{
-          const playerIndex:number = currentGame.roles.findIndex((role:Role)=>role.user.playerId === playerId);
+     static async setKill(currentGame:GameDocument,playerId:string):Promise<GameDocument>{
+          const playerIndex:number = currentGame.roles.findIndex((role:Role)=>role.player.playerId === playerId);
 
           if(playerIndex === -1){
                throw new Error("There is no such player in the game")
           }
 
           currentGame.roles[playerIndex].alive=false;
-
-          return DBController.updateGame(currentGame,errorMessage)      
+          return DBController.updateGame(currentGame)      
      }
 }

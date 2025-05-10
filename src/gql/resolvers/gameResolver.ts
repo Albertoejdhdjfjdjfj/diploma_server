@@ -4,32 +4,75 @@ import { GameRoomDocument } from '../../assets/interfaces/GameRoom';
 import { GameRoomModel} from '../../assets/models/GameRoom';
 import { PubSub, withFilter } from 'graphql-subscriptions';
 import { playersMin} from '../../assets/variables/variables';
-import { NewMessage,AssignRole } from '../../assets/actions/actionsTypes';
-import { NEW_MESSAGE,ASSIGNING_ROLE } from '../../assets/actions/actionsList';
+import { NewMessage,AssignRole, UpdateMembers } from '../../assets/actions/actionsTypes';
+import { NEW_MESSAGE,ASSIGNING_ROLE, UPDATE_MEMBERS } from '../../assets/actions/actionsList';
 import { decodeToken } from '../../assets/functions/helpFunctions/decodeToken';
 import { Role } from '../../assets/interfaces/Role';
-import { Roles } from '../../assets/enums/Roles';
-import { DecodedToken } from '../../assets/interfaces/DecodedToken';
-import { determinateReceiver } from '../../assets/functions/gameFunctions/determinateReceiver';
-import { selectionProcess } from '../../assets/functions/gameFunctions/selectionProcess';
+import { filterChat } from '../../assets/functions/helpFunctions/filterChat';
+import { GameAlgorithms } from '../../assets/classes/GameAlgorithms';
 import { Player } from '../../assets/interfaces/Player';
-import { getPlayerRole } from '../../assets/functions/helpFunctions/getPlayerRole';
 import { GameCore } from '../../core/GameCore';
 import { DBController } from '../../assets/classes/dbController';
 import { PubController } from '../../assets/classes/PubController';
+import { Message } from '../../assets/interfaces/Message';
 
 const pubsub = new PubSub();
 
 const gameResolver = {
     Query: {   
-     
+        getMessages: async (_: any, args: {gameId:string}, player: Player): Promise<Array<Message>> => {
+            try {
+                const { gameId } = args; 
+                const currentGame: GameDocument | null = await GameModel.findById(gameId)
+
+                if (!currentGame) {
+                    throw new Error("The Game does not exist");
+                }
+
+                const playerInGame:Player|undefined = DBController.getPlayerById(currentGame,player.playerId)
+
+                if (!playerInGame) {
+                    throw new Error("You are not player in this game");
+                }
+
+                const playerRole:Role|undefined = DBController.getPlayerRoleById(currentGame,player.playerId);
+                
+                if(!playerRole){
+                    return currentGame.chat
+                }
+
+                return filterChat(currentGame.chat,playerRole.name)
+            } catch (error) {
+                throw new Error((error as Error).message);
+            }
+          },
+          getPlayers: async (_: any, args: {gameId:string}, player: Player): Promise<{players:Array<Player>,observers:Array<Player>}> => {
+            try {
+                const { gameId } = args; 
+                const currentGame: GameDocument | null = await GameModel.findById(gameId)
+
+                if (!currentGame) {
+                    throw new Error("The Game does not exist");
+                }
+
+                const playerInGame:Player|undefined = DBController.getPlayerById(currentGame,player.playerId)
+
+                if (!playerInGame) {
+                    throw new Error("You are not player in this game");
+                }
+
+                return {players:currentGame.players,observers:currentGame.observers}
+            } catch (error) {
+                throw new Error((error as Error).message);
+            }
+          },
     },
     Mutation: {
-      startGame: async(_: any, args:any,player:Player): Promise<void> => {
+      startGame: async(_: any, args:{gameId:string},player:Player): Promise<void> => {
               try {
-                  const { id } = args; 
+                  const { gameId } = args; 
           
-                  const gameRoom: GameRoomDocument | null = await GameRoomModel.findById(id);
+                  const gameRoom: GameRoomDocument | null = await GameRoomModel.findById(gameId);
       
                   if (!gameRoom) {
                       throw new Error("The Game room does not exist");
@@ -59,56 +102,46 @@ const gameResolver = {
                   throw new Error((error as Error).message); 
               }
           },
-
-          sendMessage: async (_: any, args: {content:string}, player: Player): Promise<void> => {
+          sendMessage: async (_: any, args: {content:string,gameId:string}, player: Player): Promise<void> => {
             try {
-                const { content } = args; 
-                const currentGame: GameDocument | null = await GameModel.findOne({
-                    players: { playerId: player.playerId } 
-                }).exec();
+                const { content,gameId } = args; 
+                let currentGame: GameDocument | null = await GameModel.findById(gameId)
 
                 if (!currentGame) {
                     throw new Error("The Game does not exist");
                 }
 
-                const playerRole:Role = getPlayerRole(currentGame,player.playerId,"You are not player");
-    
-                if(playerRole.name !== currentGame.role || playerRole.user.nickname !== currentGame.player){
+                const playerRole:Role|undefined = DBController.getPlayerRoleById(currentGame,player.playerId);
+                if(!playerRole){
+                    throw new Error("You are not player in this game");
+                }
+
+                if((playerRole.name !== currentGame.roleInLine && playerRole.player.nickname !== currentGame.playerInLine?.nickname) || playerRole.player.nickname !== currentGame.playerInLine?.nickname){
                     throw new Error("It is not your order to talk");
                 }
                 
-                const receiver = determinateReceiver(playerRole.name,currentGame.phase,currentGame.role);
+                const receiver = GameAlgorithms.determineReceiverRole(playerRole.name,currentGame.phase,currentGame.roleInLine)
+                const target = GameAlgorithms.getWordStartingWithAt(content);
 
-                if(receiver === Roles.NOBODY){
-                    throw new Error("You can not talk");
+                if(target){
+                    const targetId:string|undefined = DBController.getPlayerByName(currentGame,target)?.playerId
+                    if(!targetId){
+                        throw new Error("Target is not player in this game");
+                    }
+                    await DBController.addMessage(currentGame,player,receiver,content) 
+                    await PubController.pubMessage(currentGame,pubsub)
+                    new GameCore(currentGame,pubsub).game()
+                    return
                 }
-                
-                await DBController.addMessage(currentGame,player,receiver,content,currentGame.phase,false) 
+
+                await DBController.addMessage(currentGame,player,receiver,content) 
                 await PubController.pubMessage(currentGame,pubsub)
             } catch (error) {
                 throw new Error((error as Error).message);
             }
-          },
-
-          sendSelection: async (_: any, args: {targetId:string}, player: Player): Promise<void> => {
-            try {
-                const { targetId } = args; 
-                console.log(player)
-                let currentGame: GameDocument | null = await GameModel.findOne({
-                    players: { $elemMatch: { playerId: player.playerId }}
-                });
-
-                if (!currentGame) {
-                    throw new Error("The Game does not exist");
-                }
-
-                currentGame=await selectionProcess(currentGame,player.playerId,targetId,pubsub)
-                new GameCore(currentGame,pubsub).game()
-            } catch (error) {
-                throw new Error((error as Error).message);
-            }
           }
-    }, 
+},
+ 
      Subscription: {
         message: {
             subscribe: withFilter<NewMessage>(
@@ -122,7 +155,7 @@ const gameResolver = {
                     const data = decodeToken(token)
                     return data.userId === payload.message.receiverId   
                 }
-            ),
+            )
         },
         role: {
             subscribe: withFilter<AssignRole>(
@@ -138,7 +171,21 @@ const gameResolver = {
                 }
             ),
         },
-    }, 
+        members: {
+            subscribe: withFilter<UpdateMembers>(
+                () => pubsub.asyncIterableIterator(UPDATE_MEMBERS),
+                (payload: UpdateMembers|undefined, variables:{token:string}) => {
+                    if (!payload) {
+                        return false; 
+                    }
+
+                    const token=variables.token.split(' ')[1];
+                    const data = decodeToken(token)
+                    return data.userId === payload.members.receiverId 
+                }
+            ),
+        }
+    }
 };
 
 module.exports = gameResolver;

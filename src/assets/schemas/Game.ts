@@ -19,21 +19,17 @@ export const GameSchema: Schema<GameDocument> = new Schema<GameDocument>({
          type: PlayerSchema,    
          default: []               
      }],
-     isActive: {
-         type: Boolean,
-         default: true            
-     },
      phase: {
          type: String,
          default: GamePhase.VOTING    
      },
-     role:{
+     roleInLine:{
         type: String,
-        default: ""    
+        default: Roles.NOBODY 
      },
-     player:{
-        type: String,
-        default: ""    
+     playerInLine:{
+        type: PlayerSchema,
+        default: null    
      },
      round: {
          type: Number,
@@ -43,10 +39,6 @@ export const GameSchema: Schema<GameDocument> = new Schema<GameDocument>({
         type:MessageSchema,
         default:[]
     }],
-     winner: [{ 
-         type: PlayerSchema,      
-         default: []                
-     }],
      voting:[{
         type: PlayerSchema,      
         default: []   

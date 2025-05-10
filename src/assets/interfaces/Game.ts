@@ -8,14 +8,12 @@ import { Message } from "./Message";
 export interface Game{
      players: Array<Player>;
      roles:  Array<Role>;
-     observers: Player[];       
-     isActive: boolean;         
+     observers: Player[];               
      phase: string; 
-     role:string;  
-     player:string;
+     roleInLine:string;  
+     playerInLine:Player|null;
      round: number;  
-     chat:Array<Message>          
-     winner?: Player[];   
+     chat:Array<Message>           
      voting:Array<Player>; 
 }
 

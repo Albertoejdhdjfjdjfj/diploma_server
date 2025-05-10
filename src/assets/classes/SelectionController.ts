@@ -14,8 +14,8 @@ export class SelectionController{
                throw new Error("You have to choose");  
           }
 
-          if(targetRole.name === Roles.MANIAC){
-               throw new Error("You can not choose yourself");
+          if(targetRole.name === Roles.LOVER || targetRole.player.playerId === playerRole.player.playerId){
+               throw new Error("You can not choose yourself or sameone with the same role");
           }
           
           if(targetRole.alibi === currentGame.round - 1){
@@ -24,20 +24,26 @@ export class SelectionController{
 
           if(currentGame.phase === GamePhase.NIGHT){
                if(targetRole.name===Roles.MAFIA){
-                    const mafiaPlayers = currentGame.roles.filter(role => role.name === Roles.MAFIA);
+                    const mafiaPlayers = currentGame.roles.filter(role => (role.name === Roles.MAFIA));
 
                     for (const mafiaRole of mafiaPlayers) {
-                         currentGame = await DBController.addAlibi(currentGame, mafiaRole.user.playerId);
+                         currentGame = await DBController.addAlibi(currentGame, mafiaRole.player.playerId);
+                    }                               
+               }
+               else if(targetRole.name===Roles.DON){
+                    const mafiaPlayers = currentGame.roles.filter(role => (role.name === Roles.MAFIA)||(role.name === Roles.DON));
+     
+                    for (const mafiaRole of mafiaPlayers) {
+                         currentGame = await DBController.addAlibi(currentGame, mafiaRole.player.playerId);
                     }
-                                        
                }
                else{
-                   currentGame = await DBController.addAlibi(currentGame,targetRole.user.playerId)
+                   currentGame = await DBController.addAlibi(currentGame,targetRole.player.playerId)
                }
           }
           else{
-               currentGame = await DBController.addVote(currentGame,targetRole.user)
-               currentGame = await DBController.addMessage(currentGame,playerRole.user,Roles.ALL,targetRole.user.nickname,GamePhase.VOTING,true);
+               currentGame = await DBController.addVote(currentGame,targetRole.player)
+               currentGame = await DBController.addMessage(currentGame,playerRole.player,Roles.ALL,targetRole.player.nickname);
           }
      
           await PubController.pubMessage(currentGame,pubsub)
@@ -49,13 +55,17 @@ export class SelectionController{
                throw new Error("You have to choose");  
           }
 
-          currentGame = await DBController.addVote(currentGame,targetRole.user)
+          if(targetRole.name === Roles.MAFIA || targetRole.player.playerId === playerRole.player.playerId){
+               throw new Error("You can not choose yourself or sameone with the same role");
+          }
+
+          currentGame = await DBController.addVote(currentGame,targetRole.player)
 
           if(currentGame.phase === GamePhase.NIGHT){
-               currentGame = await DBController.addMessage(currentGame,playerRole.user,Roles.MAFIA,targetRole.user.nickname,GamePhase.NIGHT,true);
+               currentGame = await DBController.addMessage(currentGame,playerRole.player,Roles.MAFIA,targetRole.player.nickname);
           }
           else{
-               currentGame = await DBController.addMessage(currentGame,playerRole.user,Roles.ALL,targetRole.user.nickname,GamePhase.VOTING,true);
+               currentGame = await DBController.addMessage(currentGame,playerRole.player,Roles.ALL,targetRole.player.nickname);
           } 
 
           await PubController.pubMessage(currentGame,pubsub)
@@ -67,24 +77,28 @@ export class SelectionController{
                throw new Error("You have to choose");  
           }
 
-          if(currentGame.role === Roles.DON){
-               currentGame = await DBController.addMessage(currentGame,playerRole.user,Roles.DON,targetRole.user.nickname,GamePhase.NIGHT,true)
+          if(targetRole.name === Roles.MAFIA || targetRole.name === Roles.DON || targetRole.player.playerId === playerRole.player.playerId){
+               throw new Error("You can not choose yourself or sameone with the same role");
+          }
 
-               if(targetRole.name === Roles.MAFIA){
-                    currentGame = await DBController.addMessage(currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.DON,`Yes,${targetRole.user.nickname} is sheriff`,GamePhase.NIGHT,true);
+          if(currentGame.roleInLine === Roles.DON){
+               currentGame = await DBController.addMessage(currentGame,playerRole.player,Roles.DON,targetRole.player.nickname)
+
+               if(targetRole.name === Roles.SHERIFF){
+                    currentGame = await DBController.addMessage(currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.DON,`Yes,${targetRole.player.nickname} is sheriff`);
                }
                else{
-                    currentGame = await DBController.addMessage(currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.DON,`No,${targetRole.user.nickname} is not sheriff`,GamePhase.NIGHT,true);
+                    currentGame = await DBController.addMessage(currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.DON,`No,${targetRole.player.nickname} is not sheriff`);
                }
-          }
+          } 
           else{
-               currentGame = await DBController.addVote(currentGame,targetRole.user);
+               currentGame = await DBController.addVote(currentGame,targetRole.player);
 
                if(currentGame.phase === GamePhase.NIGHT){
-                    currentGame = await DBController.addMessage(currentGame,playerRole.user,Roles.MAFIA,targetRole.user.nickname,GamePhase.NIGHT,true);
+                    currentGame = await DBController.addMessage(currentGame,playerRole.player,Roles.MAFIA,targetRole.player.nickname);
                }
                else{
-                    currentGame = await DBController.addMessage(currentGame,playerRole.user,Roles.ALL,targetRole.user.nickname,GamePhase.VOTING,true);
+                    currentGame = await DBController.addMessage(currentGame,playerRole.player,Roles.ALL,targetRole.player.nickname);
                } 
           }
 
@@ -97,19 +111,23 @@ export class SelectionController{
                throw new Error("You have to choose");  
           }
 
-          if(currentGame.phase === GamePhase.NIGHT){
-               currentGame = await DBController.addMessage(currentGame,playerRole.user,Roles.SHERIFF,targetRole.user.nickname,GamePhase.NIGHT,true);
+          if(targetRole.name === Roles.SHERIFF || targetRole.player.playerId === playerRole.player.playerId){
+               throw new Error("You can not choose yourself or sameone with the same role");
+          }
 
-               if(targetRole.name === Roles.MAFIA){
-                    currentGame = await DBController.addMessage(currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.SHERIFF,`Yes,${targetRole.user.nickname} is mafia`,GamePhase.NIGHT,true);
+          if(currentGame.phase === GamePhase.NIGHT){
+               currentGame = await DBController.addMessage(currentGame,playerRole.player,Roles.SHERIFF,targetRole.player.nickname);
+
+               if(targetRole.name === Roles.MAFIA || targetRole.name === Roles.DON){
+                    currentGame = await DBController.addMessage(currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.SHERIFF,`Yes,${targetRole.player.nickname} is mafia`);
                }
                else{
-                    currentGame = await DBController.addMessage(currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.SHERIFF,`No,${targetRole.user.nickname} is not mafia`,GamePhase.NIGHT,true);
+                    currentGame = await DBController.addMessage(currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.SHERIFF,`No,${targetRole.player.nickname} is not mafia`);
                }
           }
           else{
-               currentGame = await DBController.addVote(currentGame,targetRole.user);
-               currentGame = await DBController.addMessage(currentGame,playerRole.user,Roles.ALL,targetRole.user.nickname,GamePhase.NIGHT,true);
+               currentGame = await DBController.addVote(currentGame,targetRole.player);
+               currentGame = await DBController.addMessage(currentGame,playerRole.player,Roles.ALL,targetRole.player.nickname);
           }
 
           await PubController.pubMessage(currentGame,pubsub)
@@ -135,16 +153,16 @@ export class SelectionController{
                     const targetRoleLover:Role|undefined = currentGame.roles.find((role:Role)=>role.alibi === currentGame.round);
 
                     if(targetRoleLover){
-                         currentGame = await DBController.setCure(currentGame,targetRoleLover.user.playerId)
+                         currentGame = await DBController.setCure(currentGame,targetRoleLover.player.playerId)
                     }         
                }
 
-               currentGame = await DBController.setCure(currentGame,targetRole.user.playerId)
-               currentGame = await DBController.addMessage(currentGame,playerRole.user,Roles.DOCTOR,targetRole.user.nickname,GamePhase.NIGHT,true);
+               currentGame = await DBController.setCure(currentGame,targetRole.player.playerId)
+               currentGame = await DBController.addMessage(currentGame,playerRole.player,Roles.DOCTOR,targetRole.player.nickname);
           }
           else{
-               currentGame.voting.push(targetRole.user)
-               currentGame = await DBController.addMessage(currentGame,playerRole.user,Roles.ALL,targetRole.user.nickname,GamePhase.VOTING,true);
+               currentGame.voting.push(targetRole.player)
+               currentGame = await DBController.addMessage(currentGame,playerRole.player,Roles.ALL,targetRole.player.nickname);
           }
 
           await PubController.pubMessage(currentGame,pubsub)
@@ -153,23 +171,23 @@ export class SelectionController{
 
      static async maniakSelection(currentGame:GameDocument,playerRole:Role,targetRole:Role|undefined,pubsub:PubSub):Promise<GameDocument>{
           if(!targetRole && currentGame.phase === GamePhase.NIGHT){
-               currentGame = await DBController.addMessage(currentGame,playerRole.user,Roles.MANIAC,"I do not choose anyone.",GamePhase.NIGHT,true);
+               currentGame = await DBController.addMessage(currentGame,playerRole.player,Roles.MANIAC,"I do not choose anyone.");
           }else{
                if(!targetRole){
                     throw new Error("You have to choose");  
                }
 
-               if(targetRole.name === Roles.MANIAC){
-                    throw new Error("You can not kill yourself");
+               if(targetRole.name === Roles.MANIAC || targetRole.player.playerId === playerRole.player.playerId){
+                    throw new Error("You can not choose yourself or sameone with the same role");
                }
 
                if(currentGame.phase === GamePhase.NIGHT){
-                    currentGame = await DBController.setKill(currentGame,targetRole.user.playerId)
-                    currentGame = await DBController.addMessage(currentGame,playerRole.user,Roles.MANIAC,targetRole.user.nickname,GamePhase.NIGHT,true);
+                    currentGame = await DBController.setKill(currentGame,targetRole.player.playerId)
+                    currentGame = await DBController.addMessage(currentGame,playerRole.player,Roles.MANIAC,targetRole.player.nickname);
                }
                else{
-                    currentGame = await DBController.addVote(currentGame,targetRole.user);
-                    currentGame = await DBController.addMessage(currentGame,playerRole.user,Roles.ALL,targetRole.user.nickname,GamePhase.NIGHT,true);
+                    currentGame = await DBController.addVote(currentGame,targetRole.player);
+                    currentGame = await DBController.addMessage(currentGame,playerRole.player,Roles.ALL,targetRole.player.nickname);
                }
           }
 

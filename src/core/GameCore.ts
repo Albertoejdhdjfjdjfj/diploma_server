@@ -4,11 +4,9 @@ import { Roles } from "../assets/enums/Roles";
 import { PubSub } from "graphql-subscriptions";
 import { DBController } from "../assets/classes/dbController";
 import { PubController } from "../assets/classes/PubController";
-import { distributeRoles } from "../assets/functions/gameFunctions/distributeRoles";
-import { nextRole } from "../assets/functions/gameFunctions/nextRole";
-import { nextPlayer } from "../assets/functions/gameFunctions/nextPlayer";
 import { Role } from "../assets/interfaces/Role";
-import { determinateKilled } from "../assets/functions/gameFunctions/determinateKilled";
+import { GameAlgorithms } from "../assets/classes/GameAlgorithms";
+import { Player } from "../assets/interfaces/Player";
 
 export class GameCore{
     currentGame:GameDocument;
@@ -26,103 +24,185 @@ export class GameCore{
         if(this.currentGame.phase === GamePhase.NIGHT){
             await this.nightPhase();
         }
-        if(this.currentGame.phase === GamePhase.DAY && !this.currentGame.role && !this.currentGame.player){
+        if(this.currentGame.phase === GamePhase.DAY && !this.currentGame.roleInLine && !this.currentGame.playerInLine){
             await this.dayPhase();
         }
-        if(this.currentGame.phase === GamePhase.VOTING && !this.currentGame.role && !this.currentGame.player){
-           await this.votingPhase();
+        if(this.currentGame.phase === GamePhase.DISCUSSION && !this.currentGame.roleInLine && !this.currentGame.playerInLine){
+            await this.discussionPhase();
         }
-        
+        if(this.currentGame.phase === GamePhase.VOTING && !this.currentGame.roleInLine && !this.currentGame.playerInLine){
+           await this.votingPhase();
+        }     
     }
 
     private async startNewRound():Promise<void> {
         if(!this.currentGame.round){
-            this.currentGame=await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,"Hello everyone, the game has started and you will be assigned the appropriate role",GamePhase.VOTING,false)
+            this.currentGame=await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,"Hello everyone, the game has started and you will be assigned the appropriate role")
             await PubController.pubMessage(this.currentGame,this.pubsub);
             
-
-            this.currentGame=await DBController.setRoles(this.currentGame,distributeRoles(this.currentGame.players))
+            this.currentGame=await DBController.setRoles(this.currentGame,GameAlgorithms.distributeRoles(this.currentGame.players))
             await PubController.pubRoles(this.currentGame,this.pubsub);
         }
     
         this.currentGame = await DBController.newRound(this.currentGame);
-        this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,`Round ${this.currentGame.round}`,GamePhase.VOTING,false) 
+        this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,`Round ${this.currentGame.round}`) 
         this.currentGame = await DBController.setPhase(this.currentGame,GamePhase.NIGHT);
         await PubController.pubMessage(this.currentGame,this.pubsub) 
     }
 
     private async nightPhase():Promise<void>{
         if(
-            this.currentGame.role === Roles.NOBODY &&
-            this.currentGame.player === Roles.NOBODY 
+            this.currentGame.roleInLine === Roles.NOBODY &&
+            this.currentGame.playerInLine === null 
         )
         {
-            this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,`The city is falling asleep`,GamePhase.NIGHT,false);
+            this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,`The city is falling asleep`);
             await PubController.pubMessage(this.currentGame,this.pubsub) 
         }
-
-        const currentRole:string = this.currentGame.role;
-        let nextRoleInLine:string = nextRole(this.currentGame);
         
-        this.currentGame = await DBController.setRole(this.currentGame,nextRoleInLine)
+        const lastRoleInLine=this.currentGame.roleInLine;
 
-        if(nextRoleInLine === Roles.NOBODY){
-            this.currentGame=await DBController.setPhase(this.currentGame,GamePhase.DAY);
-            this.currentGame = await DBController.setPlayer(this.currentGame,Roles.NOBODY);
+        if(lastRoleInLine!==this.currentGame.roleInLine){    
+            this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,`The ${this.currentGame.roleInLine} is waking up`);
+            await PubController.pubMessage(this.currentGame,this.pubsub) 
         }
+              
+        const newRole:Role|undefined = this.currentGame.roles.find((role:Role)=>role.name === this.currentGame.roleInLine);
+  
+        if(newRole && (newRole.alibi === this.currentGame.round)){
+              this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},newRole.name,"You are blocked, your lover chose you");
+              this.nightPhase()
+        }  
+        
+        const mafia: Array<Role> = this.currentGame.roles.filter((role: Role) => role.name === Roles.MAFIA || role.name === Roles.DON);
 
-        const nextPlayerInLine:string = nextPlayer(this.currentGame);
+        if(this.currentGame.roleInLine === Roles.MAFIA){
+            if(this.currentGame.voting.length==mafia.length){
+                const winner = GameAlgorithms.voting(this.currentGame.voting);
+                if(winner){
+                    this.currentGame=await DBController.setKill(this.currentGame,winner.playerId);
+                    this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},this.currentGame.roleInLine,`${this.currentGame.playerInLine?.nickname} won the vote`);
+                }
+                else{
+                    this.currentGame = await DBController.cleanVoting(this.currentGame);
+                    this.currentGame = await DBController.setPlayerInLine(this.currentGame,null);
+                    this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},this.currentGame.roleInLine,`There is no winner of the poll, please vote again`);
+                }
+            }
 
-        if(nextPlayerInLine===Roles.NOBODY){
-            this.currentGame = await DBController.cleanVoting(this.currentGame);
-        }
+            const nextPlayerInLine:Player|null = GameAlgorithms.nextMafiaPlayerInLine(this.currentGame);
 
-        this.currentGame = await DBController.setPlayer(this.currentGame,nextPlayerInLine);
-
-        if(currentRole!==nextRoleInLine){    
-          this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,`The ${nextRoleInLine} is waking up`,GamePhase.NIGHT,false);
-          await PubController.pubMessage(this.currentGame,this.pubsub) 
-        }
+            if(!this.currentGame.playerInLine && !this.currentGame.voting.length){
+                let nextRoleInLine:string = GameAlgorithms.nextRoleInLine(this.currentGame);  
+                this.currentGame = await DBController.setRoleInLine(this.currentGame,nextRoleInLine)
             
-        const candiateRole:Role|undefined = this.currentGame.roles.find((role:Role)=>role.name === nextRoleInLine);
-
-        if(candiateRole && (candiateRole.alibi === this.currentGame.round)){
-            this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},candiateRole.name,"You are blocked, your lover chose you",GamePhase.NIGHT,false);
-            this.nightPhase()
-        }        
+                if(nextRoleInLine===Roles.NOBODY){
+                    this.currentGame=await DBController.setPhase(this.currentGame,GamePhase.DAY);
+                    this.currentGame = await DBController.cleanVoting(this.currentGame);
+                }
+            }
+            this.currentGame = await DBController.setPlayerInLine(this.currentGame,nextPlayerInLine);
+            this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},this.currentGame.roleInLine,`This is ${this.currentGame.playerInLine?.nickname} speaking`);
+        }
     }
 
     private async dayPhase():Promise<void>{
-        const killed:Array<Role> = determinateKilled(this.currentGame);
-
+        this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,`Everyone wakes up`);
+        await PubController.pubMessage(this.currentGame,this.pubsub) 
+        
+        const killed:Array<Role> = GameAlgorithms.determinateKilled(this.currentGame);
         if(killed.length){
-            this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,`That night, ${killed.toString()} were killed`,GamePhase.DAY,false);
+            this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,`That night, ${killed.map((role:Role)=>role.player.nickname).join(', ')} were killed`);
         }
         else{
-            this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,`No one was killed that night`,GamePhase.DAY,false);
+            this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,`No one was killed that night`);
         }
 
         for (const role of killed) {
-            this.currentGame = await DBController.deletePlayer(this.currentGame, role.user.playerId);
-            this.currentGame = await DBController.addPlayerToObservers(this.currentGame, role.user);
+            this.currentGame = await DBController.deletePlayer(this.currentGame, role.player.playerId);
+            this.currentGame = await DBController.addPlayerToObservers(this.currentGame, role.player);
         }
 
+        await this.endingGame();
         this.currentGame=await DBController.setPhase(this.currentGame,GamePhase.VOTING)
     }
 
-    private async votingPhase():Promise<void>{ 
-        const nextPlayerInLine:string = nextPlayer(this.currentGame);
+    private async discussionPhase():Promise<void>{ 
+        if(
+            this.currentGame.roleInLine === Roles.NOBODY &&
+            this.currentGame.playerInLine === null 
+        )
+        {
+            this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,`The day's discussion begins`);
+            await PubController.pubMessage(this.currentGame,this.pubsub) 
+        }
+        const nextPlayerInLine:Player|null= GameAlgorithms.nextPlayerInLine(this.currentGame);
 
-        this.currentGame = await DBController.setPlayer(this.currentGame,nextPlayerInLine);
+        this.currentGame = await DBController.setPlayerInLine(this.currentGame,nextPlayerInLine);
 
-        if(nextPlayerInLine === Roles.NOBODY){
-            
-            this.currentGame=await DBController.setPhase(this.currentGame,GamePhase.NIGHT); 
+        if(nextPlayerInLine === null){
+            this.currentGame=await DBController.setPhase(this.currentGame,GamePhase.VOTING); 
             await this.startNewRound()           
         }else{
-            this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,`${nextPlayer} votes`,GamePhase.NIGHT,false)
+            this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,`${nextPlayerInLine}'s speaking`)
         }
                
         await PubController.pubMessage(this.currentGame,this.pubsub) 
+    }
+
+    private async votingPhase():Promise<void>{ 
+        if(
+            this.currentGame.roleInLine === Roles.NOBODY &&
+            this.currentGame.playerInLine === null 
+        )
+        {
+            this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,`Voting begins`);
+            await PubController.pubMessage(this.currentGame,this.pubsub) 
+        }
+
+        const nextPlayerInLine:Player|null= GameAlgorithms.nextPlayerInLine(this.currentGame);
+
+        this.currentGame = await DBController.setPlayerInLine(this.currentGame,nextPlayerInLine);
+
+        if(nextPlayerInLine === null){
+            this.currentGame=await DBController.setPhase(this.currentGame,GamePhase.NIGHT); 
+            const winner = GameAlgorithms.voting(this.currentGame.voting);
+            if(winner){
+                const winnerRole = DBController.getPlayerRoleById(this.currentGame,winner.playerId)
+                if(!winnerRole?.alibi){
+                    this.currentGame = await DBController.deletePlayer(this.currentGame, winner.playerId);
+                    this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,`${winner.nickname} won the vote. He is leaving the game`);
+                    await PubController.pubMessage(this.currentGame,this.pubsub) 
+                    this.currentGame = await DBController.addPlayerToObservers(this.currentGame, winner);
+                    await this.endingGame();
+                    await this.startNewRound(); 
+                }
+                else{
+                    this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,`Today mistress visited him ${winner.nickname}. He continues the game`);
+                    await PubController.pubMessage(this.currentGame,this.pubsub) 
+                }    
+            }   
+            else{
+                this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,`There is no winner of the poll, please vote again`)
+                await PubController.pubMessage(this.currentGame,this.pubsub) 
+            } 
+        }else{
+            this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,`${nextPlayerInLine} votes`);
+            await PubController.pubMessage(this.currentGame,this.pubsub) 
+        }
+    }
+
+    private async endingGame():Promise<void>{ 
+        const mafia: Array<Role> = this.currentGame.roles.filter((role: Role) => role.name === Roles.MAFIA || role.name === Roles.DON);
+        if(mafia.length>=this.currentGame.roles.length-mafia.length){
+            this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,`The mafia won`)
+            await PubController.pubMessage(this.currentGame,this.pubsub) 
+            await DBController.deleteGame(this.currentGame,60000);
+        }
+        if(mafia.length === 0){
+            this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,`Citizens won`)
+            await PubController.pubMessage(this.currentGame,this.pubsub) 
+            await DBController.deleteGame(this.currentGame,60000);
+        }
     }
 }

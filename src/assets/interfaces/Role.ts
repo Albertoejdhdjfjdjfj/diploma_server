@@ -2,7 +2,7 @@ import { Document } from "mongoose";
 import { Player } from "./Player";
 
 export interface Role{
-     user: Player;
+     player: Player;
      name: string;
      alive: boolean;
      alibi:number;

@@ -214,7 +214,7 @@ export const rolesDistribution: Array<Array<RoleConfig>> = [
      ]
      ]
 
-     export const rolesOrder:Array<string> = [ 
+     export const rolesLine:Array<string> = [ 
         Roles.LOVER,
         Roles.SHERIFF,
         Roles.MAFIA,

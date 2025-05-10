@@ -7,4 +7,4 @@ export const GameRoomSchema: Schema<GameRoomDocument> = new Schema<GameRoomDocum
      creator: { type: PlayerSchema, required: true },
      players: [{ type: PlayerSchema, required: true }],
      observers: [{ type: PlayerSchema }],
- });
+ }); 

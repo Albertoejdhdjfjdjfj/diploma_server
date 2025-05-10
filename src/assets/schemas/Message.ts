@@ -7,8 +7,7 @@ export const MessageSchema: Schema<MessageDocument> = new Schema<MessageDocument
     sender: { type: PlayerSchema, required: true },
     receiverRole:{type: String,required:true},
     content: { type: String, required: true },
-    phase:{type: String, enum: Object.values(GamePhase),required: true,default: GamePhase.DAY},
-    isSelect:{ type: Boolean, required: true ,default: false}
+    phase: { type: String, required: true },
 });
 
 

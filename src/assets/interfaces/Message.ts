@@ -3,10 +3,9 @@ import { Player } from "./Player";
 
 export interface Message {
      sender: Player,
-     receiverRole:string
+     receiverRole:string,
      content:string,
-     phase:string,
-     isSelect:boolean
+     phase:string
  }
  
  export interface MessageDocument extends Message, Document {}

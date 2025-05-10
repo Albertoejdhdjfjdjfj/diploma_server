@@ -6,7 +6,7 @@ import { execute,subscribe } from "graphql";
 import { SubscriptionServer } from 'subscriptions-transport-ws'
 const { makeExecutableSchema } = require('@graphql-tools/schema');
 const mongoose = require('mongoose');
-
+ 
 
 require('dotenv').config();
 const PORT = process.env.PORT;
@@ -44,7 +44,6 @@ const schema = makeExecutableSchema({ typeDefs, resolvers });
         return new Error(error.message);
     },
  });
- const connectedClients = new Set();
 
  const subscriptionServer = SubscriptionServer.create({
      schema,
@@ -53,14 +52,6 @@ const schema = makeExecutableSchema({ typeDefs, resolvers });
  }, {
      server: httpServer,
      path: '/subscriptions',
-     onConnect: (connectionParams: any, webSocket: any): void => {
-         connectedClients.add(webSocket);
-         console.log('Client connected. Total connected clients:', connectedClients.size);
-     },
-     onDisconnect: (webSocket: any): void => {
-         connectedClients.delete(webSocket);
-         console.log('Client disconnected. Total connected clients:', connectedClients.size);
-     }
  });
 
 const start = async () => {

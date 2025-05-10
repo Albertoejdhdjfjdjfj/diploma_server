@@ -2,7 +2,7 @@ import { GameRoomModel} from '../../assets/models/GameRoom';
 import { GameRoomDocument } from '../../assets/interfaces/GameRoom';
 import { playersMax,playersMin } from '../../assets/variables/variables';
 import { Player } from '../../assets/interfaces/Player';
-import { PubSub,withFilter } from 'graphql-subscriptions';
+import { PubSub,} from 'graphql-subscriptions';
 import { UPDATE_GAME_ROOM } from '../../assets/actions/actionsList';
 
 const pubsub = new PubSub();

@@ -4,7 +4,9 @@ const typeDefs = gql`
     type Query {
         getUserInfo(id:ID!):UserInfo
         userLogIn(email: String!, password: String!): LoginPayload
-        getGameRooms(sort: String, page: Int, limit: Int): [GameRoom!]!
+        getGameRooms(sort: String!, page: Int!, limit: Int!): [GameRoom!]!
+        getMessages(gameId:String!):[Message!]!
+        getPlayers(gameId:String!):GameMembers!
     }
 
     type Mutation {
@@ -13,19 +15,25 @@ const typeDefs = gql`
         joinGameRoom(id:ID!):GameRoom
         leaveGameRoom(id:ID!):GameRoom
         startGame(id:ID!):String
-        sendMessage(content:String):String
-        sendSelection(targetId:String):String
+        sendMessage(content:String!):String
+        sendSelection(targetId:String!):String
     }
 
     type Subscription{
         message(token:String): MessageResponse
         role(token:String): RoleResponse
         updatedGameRoom: GameRoom
+        members: GameMembers
     }
     
     type RoleResponse {
         receiver:Player,
         role:String
+    }
+
+    type GameMembers{
+        players:[Player],
+        observers:[Player]
     }
 
     type MessageResponse {
