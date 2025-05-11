@@ -1,3 +1,4 @@
+import { Player } from '../../assets/interfaces/Player';
 import { UserDocument } from '../../assets/interfaces/User';
 import { UserModel} from '../../assets/models/User';
 
@@ -10,16 +11,14 @@ const ACCESS_SECRET = process.env.ACCESS_SECRET;
 
 const userResolver = {
     Query: {
-        getUserInfo:async (_: any, args:any) => {
-            const{id}=args;
-            const user:UserDocument|null=await UserModel.findById(id as string);
-            if(!user){
-              throw new Error('User does not exist')
-            }
-
-            return user
+        getProfileData:async (_: any, args:any,userData:Player) => {
+          const user:UserDocument|null=await UserModel.findById(userData.playerId as string);
+          if(!user){
+            throw new Error('User does not exist')
+          }
+           
+          return user
         },
-
         userLogIn: async (_: any, args:any) => {
             try {
               const {email,password} = args;

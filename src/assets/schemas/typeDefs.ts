@@ -2,7 +2,7 @@ const {gql} = require('apollo-server-express')
 
 const typeDefs = gql`
     type Query {
-        getUserInfo(id:ID!):UserInfo
+        getProfileData:UserInfo
         userLogIn(email: String!, password: String!): LoginPayload
         getGameRooms(sort: String!, page: Int!, limit: Int!): [GameRoom!]!
         getMessages(gameId:String!):[Message!]!
@@ -14,7 +14,7 @@ const typeDefs = gql`
         createGameRoom(name: String!): GameRoom
         joinGameRoom(id:ID!):GameRoom
         leaveGameRoom(id:ID!):GameRoom
-        startGame(id:ID!):String
+        startGame(gameId:ID!):String
         sendMessage(content:String!):String
         sendSelection(targetId:String!):String
     }

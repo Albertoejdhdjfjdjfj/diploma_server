@@ -78,7 +78,6 @@ const gameResolver = {
                       throw new Error("The Game room does not exist");
                   }
                   
-
                   if(player.playerId!== gameRoom.creator.playerId){
                       throw new Error("You are not creator of this game");
                   }

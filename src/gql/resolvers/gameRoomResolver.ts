@@ -8,7 +8,7 @@ import { UPDATE_GAME_ROOM } from '../../assets/actions/actionsList';
 const pubsub = new PubSub();
 
 const gameRoomResolver = {
-    Query: {   
+    Query: {    
       getGameRooms:async(_:any,args:any):Promise<Array<GameRoomDocument>> =>{
           try {
                 const { sort, page = 1, limit=5 } = args;
@@ -20,7 +20,7 @@ const gameRoomResolver = {
                       { name: { $regex: regex } },
                       { "creator.nickname": { $regex: regex } }
                   ]
-              })
+              }) 
               .skip(skip)
               .limit(limit);
 
@@ -67,14 +67,14 @@ const gameRoomResolver = {
                 "players.playerId": player.playerId
             });
     
-            // if (userGames && userGames.id !== gameRoom.id || joinGames) {
-            //     throw new Error('You already have an active game room');
-            // }
+            if (userGames && userGames.id !== gameRoom.id || joinGames) {
+                throw new Error('You already have an active game room');
+            }
     
-            // const playerExists = gameRoom.players.some(player => player.playerId === user.id);
-            // if (playerExists) {
-            //     throw new Error("You are already in the game room");
-            // }
+            const playerExists = gameRoom.players.some(player => player.playerId === player.playerId);
+            if (playerExists) {
+                throw new Error("You are already in the game room");
+            }
             
             if(gameRoom.players.length>=playersMax){
             gameRoom.observers.push({
@@ -99,9 +99,8 @@ const gameRoomResolver = {
         }
     },
 
-    leaveGameRoom: async (_: any, args: any, context: any): Promise<GameRoomDocument> => {
-        try {
-            const { user } = context; 
+    leaveGameRoom: async (_: any, args: any, player: Player): Promise<GameRoomDocument> => {
+        try { 
             const { id } = args; 
 
             const gameRoom: GameRoomDocument | null = await GameRoomModel.findById(id);
@@ -110,10 +109,10 @@ const gameRoomResolver = {
                 throw new Error("The Game room does not exist");
             }
     
-            let playerIndex = gameRoom.players.findIndex(player => player.playerId === user.id);
+            let playerIndex = gameRoom.players.findIndex(player => player.playerId === player.playerId);
     
             if (playerIndex === -1) {
-                playerIndex = gameRoom.observers.findIndex(player => player.playerId === user.id);
+                playerIndex = gameRoom.observers.findIndex(player => player.playerId === player.playerId);
                 if (playerIndex === -1){
                     throw new Error("You are not in this game room");
                 }
