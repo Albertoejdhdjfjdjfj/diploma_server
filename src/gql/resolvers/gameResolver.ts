@@ -4,8 +4,8 @@ import { GameRoomDocument } from '../../assets/interfaces/GameRoom';
 import { GameRoomModel} from '../../assets/models/GameRoom';
 import { PubSub, withFilter } from 'graphql-subscriptions';
 import { playersMin} from '../../assets/variables/variables';
-import { NewMessage,AssignRole, UpdateMembers } from '../../assets/actions/actionsTypes';
-import { NEW_MESSAGE,ASSIGNING_ROLE, UPDATE_MEMBERS } from '../../assets/actions/actionsList';
+import { NewMessage, ActiveGame } from '../../assets/actions/actionsTypes';
+import { NEW_MESSAGE,ACTIVE_GAME} from '../../assets/actions/actionsList';
 import { decodeToken } from '../../assets/functions/helpFunctions/decodeToken';
 import { Role } from '../../assets/interfaces/Role';
 import { filterChat } from '../../assets/functions/helpFunctions/filterChat';
@@ -22,7 +22,7 @@ const gameResolver = {
     Query: {   
         getMessages: async (_: any, args: {gameId:string}, player: Player): Promise<Array<Message>> => {
             try {
-                const { gameId } = args; 
+                const { gameId } = args;
                 const currentGame: GameDocument | null = await GameModel.findById(gameId)
 
                 if (!currentGame) {
@@ -34,7 +34,7 @@ const gameResolver = {
                 if (!playerInGame) {
                     throw new Error("You are not player in this game");
                 }
-
+ 
                 const playerRole:Role|undefined = DBController.getPlayerRoleById(currentGame,player.playerId);
                 
                 if(!playerRole){
@@ -66,13 +66,27 @@ const gameResolver = {
                 throw new Error((error as Error).message);
             }
           },
+          
+          getActiveGame: async (_: any,args:any, player: Player): Promise<{gameId:string|null}> => {
+            try { 
+                const currentGame: GameDocument|null = await GameModel.findOne({
+                
+                    "players.playerId": player.playerId
+                    
+                })
+
+                return {gameId:currentGame?currentGame.id:null}
+            } catch (error) {
+                throw new Error((error as Error).message);
+            }
+          },
     },
     Mutation: {
-      startGame: async(_: any, args:{gameId:string},player:Player): Promise<void> => {
+      startGame: async(_: any, args:{id:string},player:Player): Promise<string> => {
               try {
-                  const { gameId } = args; 
+                  const { id } = args; 
           
-                  const gameRoom: GameRoomDocument | null = await GameRoomModel.findById(gameId);
+                  const gameRoom: GameRoomDocument | null = await GameRoomModel.findById(id);
       
                   if (!gameRoom) {
                       throw new Error("The Game room does not exist");
@@ -82,12 +96,11 @@ const gameResolver = {
                       throw new Error("You are not creator of this game");
                   }
       
-                  if(gameRoom.players.length<playersMin){
-                      throw new Error("Not enough players");
-                  }
+                //   if(gameRoom.players.length<playersMin){
+                //       throw new Error("Not enough players");
+                //   }
           
                   const startedGame:GameDocument = new GameModel({
-
                       players: [...gameRoom.players],
                       observers: [...gameRoom.observers],
                   });
@@ -96,7 +109,9 @@ const gameResolver = {
     
                   // await gameRoom.deleteOne();
 
-                  new GameCore(savedGame,pubsub).game()
+                  new GameCore(savedGame,pubsub).game();
+                  PubController.pubActiveGame(savedGame,pubsub)
+                  return savedGame.id
               } catch (error) {
                   throw new Error((error as Error).message); 
               }
@@ -142,45 +157,31 @@ const gameResolver = {
 },
  
      Subscription: {
-        message: {
+        newMessage: {
             subscribe: withFilter<NewMessage>(
                 () => pubsub.asyncIterableIterator(NEW_MESSAGE),
-                (payload: NewMessage | undefined, variables:{token:string}) => {
+                (payload: NewMessage | undefined, variables:{token:string,gameId:string}) => {
                     if (!payload) {
                         return false; 
                     }
 
                     const token=variables.token.split(' ')[1];
                     const data = decodeToken(token)
-                    return data.userId === payload.message.receiverId   
+                    return (data.userId === payload.newMessage.receiverId&&variables.gameId === data.userId)   
                 }
             )
         },
-        role: {
-            subscribe: withFilter<AssignRole>(
-                () => pubsub.asyncIterableIterator(ASSIGNING_ROLE),
-                (payload: AssignRole|undefined, variables:{token:string}) => {
+        activeGame:{
+            subscribe: withFilter<ActiveGame>(
+                () => pubsub.asyncIterableIterator(ACTIVE_GAME),
+                (payload: ActiveGame|undefined, variables:{token:string}) => {
                     if (!payload) {
                         return false; 
                     }
-
+                    
                     const token=variables.token.split(' ')[1];
                     const data = decodeToken(token)
-                    return data.userId === payload.role.receiverId 
-                }
-            ),
-        },
-        members: {
-            subscribe: withFilter<UpdateMembers>(
-                () => pubsub.asyncIterableIterator(UPDATE_MEMBERS),
-                (payload: UpdateMembers|undefined, variables:{token:string}) => {
-                    if (!payload) {
-                        return false; 
-                    }
-
-                    const token=variables.token.split(' ')[1];
-                    const data = decodeToken(token)
-                    return data.userId === payload.members.receiverId 
+                    return (data.userId === payload.activeGame.receiverId) 
                 }
             ),
         }

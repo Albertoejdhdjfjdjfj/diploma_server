@@ -7,6 +7,7 @@ import { PubController } from "../assets/classes/PubController";
 import { Role } from "../assets/interfaces/Role";
 import { GameAlgorithms } from "../assets/classes/GameAlgorithms";
 import { Player } from "../assets/interfaces/Player";
+import { rolesLine } from "../assets/variables/variables";
 
 export class GameCore{
     currentGame:GameDocument;
@@ -37,11 +38,15 @@ export class GameCore{
 
     private async startNewRound():Promise<void> {
         if(!this.currentGame.round){
-            this.currentGame=await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,"Hello everyone, the game has started and you will be assigned the appropriate role")
+            this.currentGame=await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,"Hello everyone, the game has started and you will be assigned the appropriate role",2000)
             await PubController.pubMessage(this.currentGame,this.pubsub);
             
-            this.currentGame=await DBController.setRoles(this.currentGame,GameAlgorithms.distributeRoles(this.currentGame.players))
-            await PubController.pubRoles(this.currentGame,this.pubsub);
+            this.currentGame=await DBController.setRoles(this.currentGame,GameAlgorithms.distributeRoles(this.currentGame.players));
+            
+            for(let role of rolesLine){
+                this.currentGame=await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},role,`You are ${role}`,2000)
+                await PubController.pubMessage(this.currentGame,this.pubsub);
+            }
         }
     
         this.currentGame = await DBController.newRound(this.currentGame);

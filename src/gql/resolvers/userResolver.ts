@@ -2,7 +2,6 @@ import { Player } from '../../assets/interfaces/Player';
 import { UserDocument } from '../../assets/interfaces/User';
 import { UserModel} from '../../assets/models/User';
 
-const validator = require("validator");
 const bcrypt = require("bcrypt");
 const jwt = require('jsonwebtoken');
 

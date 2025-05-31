@@ -1,34 +1,32 @@
 const {gql} = require('apollo-server-express')
 
-const typeDefs = gql`
+export const schemaGQL = gql`
     type Query {
         getProfileData:UserInfo
         userLogIn(email: String!, password: String!): LoginPayload
         getGameRooms(sort: String!, page: Int!, limit: Int!): [GameRoom!]!
-        getMessages(gameId:String!):[Message!]!
+        getMessages(gameId:String!):[Message]
         getPlayers(gameId:String!):GameMembers!
-    }
-
+        getActiveGame:ActiveGameResponse!
+    } 
+ 
     type Mutation {
         userSignUp( nickname: String!,email: String!,password: String!): User
         createGameRoom(name: String!): GameRoom
         joinGameRoom(id:ID!):GameRoom
         leaveGameRoom(id:ID!):GameRoom
-        startGame(gameId:ID!):String
-        sendMessage(content:String!):String
-        sendSelection(targetId:String!):String
+        startGame(id:ID!):String
+        sendMessage(content:String!,gameId:String!):String
     }
-
+ 
     type Subscription{
-        message(token:String): MessageResponse
-        role(token:String): RoleResponse
+        newMessage(token:String,gameId:String!): Message
         updatedGameRoom: GameRoom
-        members: GameMembers
+        activeGame(token:String):ActiveGameResponse
     }
     
-    type RoleResponse {
-        receiver:Player,
-        role:String
+    type ActiveGameResponse {
+        gameId:String
     }
 
     type GameMembers{
@@ -42,12 +40,9 @@ const typeDefs = gql`
     }   
 
     type Message {
-        sender: Sender,
+        id:ID,
+        sender: Player,
         content:String
-    }
-
-    type Sender{
-        user:Player
     }
 
     type GameRoom {
@@ -79,5 +74,3 @@ const typeDefs = gql`
         token: String!
     }
 `;
-
-module.exports = typeDefs;

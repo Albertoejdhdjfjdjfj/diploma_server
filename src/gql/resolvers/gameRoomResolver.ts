@@ -64,17 +64,17 @@ const gameRoomResolver = {
             });
     
             const joinGames: GameRoomDocument | null = await GameRoomModel.findOne({
-                "players.playerId": player.playerId
+                "players.playerId": player.playerId,
             });
     
-            if (userGames && userGames.id !== gameRoom.id || joinGames) {
-                throw new Error('You already have an active game room');
-            }
+            // if (userGames && userGames.id !== gameRoom.id || joinGames) {
+            //     throw new Error('You already have an active game room');
+            // }
     
             const playerExists = gameRoom.players.some(player => player.playerId === player.playerId);
-            if (playerExists) {
-                throw new Error("You are already in the game room");
-            }
+            // if (playerExists) {
+            //     throw new Error("You are already in the game room");
+            // }
             
             if(gameRoom.players.length>=playersMax){
             gameRoom.observers.push({

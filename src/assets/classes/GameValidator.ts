@@ -1,12 +1,5 @@
-import { GameDocument } from "../interfaces/Game";
-import { Player } from "../interfaces/Player";
 import { GamePhase } from "../enums/GamePhase";
-import { GameModel } from "../models/Game";
-import { Role } from "../interfaces/Role";
 import { Roles } from "../enums/Roles";
-import { PubSub } from "graphql-subscriptions";
-import { SelectionController } from "./SelectionController";
-import { DBController } from "./dbController";
 
 export class GameValidator{
      constructor(){}

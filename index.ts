@@ -4,17 +4,16 @@ const cors = require('cors');
 const { ApolloServer } = require('apollo-server-express');
 import { execute,subscribe } from "graphql";
 import { SubscriptionServer } from 'subscriptions-transport-ws'
-const { makeExecutableSchema } = require('@graphql-tools/schema');
-const mongoose = require('mongoose');
- 
+import {makeExecutableSchema} from '@graphql-tools/schema';
+import {combineResolver} from './src/gql/resolvers/combineResolver';
+import {schemaGQL} from './src/gql/schemaGQL';
+import {context} from './src/gql/middleware/auth';
+import mongoose from 'mongoose';
+import dotenv from 'dotenv'
 
-require('dotenv').config();
+dotenv.config();
 const PORT = process.env.PORT;
-const LINK_DATABASE = process.env.LINK_DATABASE;
-
-const typeDefs = require('./src/assets/schemas/typeDefs');
-const resolvers = require('./src/gql/resolvers/index');
-const context = require('./src/gql/middleware/auth')
+const LINK_DATABASE = process.env.LINK_DATABASE as string;
 
 const app: Express = express();
 
@@ -25,7 +24,7 @@ app.use(express.json());
  
 const httpServer = http.createServer(app);
 
-const schema = makeExecutableSchema({ typeDefs, resolvers });
+const schema = makeExecutableSchema({ typeDefs:schemaGQL, resolvers: combineResolver });
 
  const server = new ApolloServer({ 
     schema,

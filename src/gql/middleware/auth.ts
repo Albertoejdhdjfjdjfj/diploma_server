@@ -3,9 +3,8 @@ import { Request } from "express";
 import { Player } from "../../assets/interfaces/Player";
 import { DecodedToken } from "../../assets/interfaces/DecodedToken";
 
-module.exports = async (context: {req:Request}):Promise<Player|void> => {
+export const context = async (context: {req:Request}):Promise<Player|void> => {
     const authHeader = context.req.headers.authorization; 
-  
     if (context.req.body.query.includes('userLogIn')||
         context.req.body.query.includes('userSignUp')||
        context.req.body.query.includes('getGameRooms')||

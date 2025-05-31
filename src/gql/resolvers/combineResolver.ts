@@ -1,7 +1,8 @@
 const userResolver = require('./userResolver')
 const gameRoomResolver = require('./gameRoomResolver')
 const gameResolver = require('./gameResolver')
-module.exports = {
+
+export const combineResolver = {
      Query:{
           ...userResolver.Query,
           ...gameRoomResolver.Query,
