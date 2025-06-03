@@ -6,9 +6,9 @@ import { PubSub, withFilter } from 'graphql-subscriptions';
 import { playersMin} from '../../assets/variables/variables';
 import { NewMessage, ActiveGame } from '../../assets/actions/actionsTypes';
 import { NEW_MESSAGE,ACTIVE_GAME} from '../../assets/actions/actionsList';
-import { decodeToken } from '../../assets/functions/helpFunctions/decodeToken';
+import { decodeToken } from '../../assets/functions/decodeToken';
 import { Role } from '../../assets/interfaces/Role';
-import { filterChat } from '../../assets/functions/helpFunctions/filterChat';
+import { filterChat } from '../../assets/functions/filterChat';
 import { GameAlgorithms } from '../../assets/classes/GameAlgorithms';
 import { Player } from '../../assets/interfaces/Player';
 import { GameCore } from '../../core/GameCore';
@@ -164,10 +164,9 @@ const gameResolver = {
                     if (!payload) {
                         return false; 
                     }
-
                     const token=variables.token.split(' ')[1];
-                    const data = decodeToken(token)
-                    return (data.userId === payload.newMessage.receiverId&&variables.gameId === data.userId)   
+                    const data = decodeToken(token);
+                    return (data.userId === payload.newMessage.receiverId&&variables.gameId === payload.newMessage.gameId)   
                 }
             )
         },

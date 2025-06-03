@@ -1,4 +1,4 @@
-import { DecodedToken } from "../../interfaces/DecodedToken";
+import { DecodedToken } from "../interfaces/DecodedToken";
 
 const jwt = require('jsonwebtoken');
 

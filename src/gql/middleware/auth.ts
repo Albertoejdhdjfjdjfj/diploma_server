@@ -1,4 +1,4 @@
-import { decodeToken } from "../../assets/functions/helpFunctions/decodeToken";
+import { decodeToken } from "../../assets/functions/decodeToken";
 import { Request } from "express";
 import { Player } from "../../assets/interfaces/Player";
 import { DecodedToken } from "../../assets/interfaces/DecodedToken";

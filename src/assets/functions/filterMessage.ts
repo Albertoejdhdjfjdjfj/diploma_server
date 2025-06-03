@@ -1,6 +1,6 @@
-import { Message } from '../../interfaces/Message'
-import { GamePhase } from "../../enums/GamePhase";
-import { Roles } from "../../enums/Roles";
+import { Message } from '../interfaces/Message'
+import { GamePhase } from "../enums/GamePhase";
+import { Roles } from "../enums/Roles";
 
 export function filterMessage(message:Message,receiverRole:String):Message|null{
      switch(receiverRole){

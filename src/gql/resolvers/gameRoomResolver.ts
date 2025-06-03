@@ -131,7 +131,7 @@ const gameRoomResolver = {
     Subscription: {
         updatedGameRoom:{
             subscribe: () => pubsub.asyncIterableIterator(UPDATE_GAME_ROOM),
-          },
+        },
         
     }    
 

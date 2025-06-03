@@ -18,11 +18,15 @@ export const schemaGQL = gql`
         startGame(id:ID!):String
         sendMessage(content:String!,gameId:String!):String
     }
- 
+  
     type Subscription{
-        newMessage(token:String,gameId:String!): Message
+        newMessage(token:String, gameId:String): NewMessageResponse
         updatedGameRoom: GameRoom
         activeGame(token:String):ActiveGameResponse
+    }
+
+    type NewMessageResponse{
+        message:Message
     }
     
     type ActiveGameResponse {

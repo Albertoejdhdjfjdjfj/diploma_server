@@ -92,8 +92,10 @@ export class GameAlgorithms{
           const currentRoleIndex:number = rolesLine.indexOf(currentRole);
 
           let nextRoleIndex = currentRoleIndex + 1;
-           
-          if (nextRoleIndex >= rolesLine.length) {
+          
+          console.log(nextRoleIndex,currentGame.roles.length,nextRoleIndex === currentGame.roles.length)
+
+          if (nextRoleIndex === currentGame.roles.length) {
                return Roles.NOBODY;
           } 
      
@@ -108,23 +110,34 @@ export class GameAlgorithms{
           return currentRole;
      }
 
-     static nextPlayerInLine(currentGame: GameDocument):Player|null {
+     static nextPlayer(currentGame: GameDocument):Player|null {
          const playerIndex: number = currentGame.players.findIndex((player: Player) => player.nickname === currentGame.playerInLine?.nickname);
          
-         if (playerIndex >= currentGame.players.length - 1) {
+         if (playerIndex +1 >= currentGame.players.length) {
              return null;
          }
+
+         console.log(currentGame.players);
+         console.log(currentGame.players[playerIndex])
      
          return currentGame.players[playerIndex + 1];
      }
+ 
+     static nextPlayerInLine(currentGame: GameDocument):Player|null {
+          let players: Array<Role>;
 
-     static nextMafiaPlayerInLine(currentGame: GameDocument):Player|null {
-          const mafia: Array<Role> = currentGame.roles.filter((role: Role) => role.name === Roles.MAFIA || role.name === Roles.DON);
+          if(currentGame.roleInLine===Roles.MAFIA){
+               players = currentGame.roles.filter((role: Role) => role.name === Roles.MAFIA || role.name === Roles.DON);
+          }
+          else{
+               players = currentGame.roles.filter((role: Role) => role.name === currentGame.roleInLine);
+          }
       
-          if (mafia.length !== currentGame.voting.length) {
-               const currentPlayerIndex = mafia.findIndex((role: Role) => role.player.nickname === currentGame.playerInLine?.nickname);
-               return mafia[currentPlayerIndex+1].player;
-          } 
+          const currentPlayerIndex = players.findIndex((role: Role) => role.player.nickname === currentGame.playerInLine?.nickname);
+
+          if(currentPlayerIndex+1<=players.length){
+               return currentGame.roles[currentPlayerIndex+1].player
+          }
       
           return null
       }
