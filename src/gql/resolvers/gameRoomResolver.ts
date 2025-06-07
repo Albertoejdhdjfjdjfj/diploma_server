@@ -71,8 +71,8 @@ const gameRoomResolver = {
                 throw new Error('You already have an active game room');
             }
     
-            const playerExists = gameRoom.players.some(player => player.playerId === player.playerId);
-            if (!playerExists) {
+            const playerExists = gameRoom.players.some(pl => pl.playerId === player.playerId);
+            if (playerExists) {
                 throw new Error("You are already in the game room");
             }
             
@@ -109,10 +109,10 @@ const gameRoomResolver = {
                 throw new Error("The Game room does not exist");
             }
     
-            let playerIndex = gameRoom.players.findIndex(player => player.playerId === player.playerId);
+            let playerIndex = gameRoom.players.findIndex(pl => pl.playerId === player.playerId);
     
             if (playerIndex === -1) {
-                playerIndex = gameRoom.observers.findIndex(player => player.playerId === player.playerId);
+                playerIndex = gameRoom.observers.findIndex(pl => pl.playerId === player.playerId);
                 if (playerIndex === -1){
                     throw new Error("You are not in this game room");
                 }

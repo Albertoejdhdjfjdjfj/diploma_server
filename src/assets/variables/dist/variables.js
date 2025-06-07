@@ -209,11 +209,11 @@ exports.rolesDistribution = [
 ];
 exports.rolesLine = [
     Roles_1.Roles.LOVER,
-    Roles_1.Roles.SHERIFF,
     Roles_1.Roles.MAFIA,
     Roles_1.Roles.DON,
-    Roles_1.Roles.MANIAC,
+    Roles_1.Roles.SHERIFF,
     Roles_1.Roles.DOCTOR,
+    Roles_1.Roles.MANIAC,
 ];
 exports.roles = [
     Roles_1.Roles.LOVER,

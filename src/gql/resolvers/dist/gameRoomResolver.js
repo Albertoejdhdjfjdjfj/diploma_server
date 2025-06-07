@@ -124,8 +124,8 @@ var gameRoomResolver = {
                         if (userGames && userGames.id !== gameRoom.id || joinGames) {
                             throw new Error('You already have an active game room');
                         }
-                        playerExists = gameRoom.players.some(function (player) { return player.playerId === player.playerId; });
-                        if (!playerExists) {
+                        playerExists = gameRoom.players.some(function (pl) { return pl.playerId === player.playerId; });
+                        if (playerExists) {
                             throw new Error("You are already in the game room");
                         }
                         if (!(gameRoom.players.length >= variables_1.playersMax)) return [3 /*break*/, 5];
@@ -167,9 +167,9 @@ var gameRoomResolver = {
                         if (!gameRoom) {
                             throw new Error("The Game room does not exist");
                         }
-                        playerIndex = gameRoom.players.findIndex(function (player) { return player.playerId === player.playerId; });
+                        playerIndex = gameRoom.players.findIndex(function (pl) { return pl.playerId === player.playerId; });
                         if (playerIndex === -1) {
-                            playerIndex = gameRoom.observers.findIndex(function (player) { return player.playerId === player.playerId; });
+                            playerIndex = gameRoom.observers.findIndex(function (pl) { return pl.playerId === player.playerId; });
                             if (playerIndex === -1) {
                                 throw new Error("You are not in this game room");
                             }
