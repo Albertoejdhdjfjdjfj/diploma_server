@@ -121,7 +121,13 @@ var gameRoomResolver = {
                             })];
                     case 3:
                         joinGames = _a.sent();
+                        if (userGames && userGames.id !== gameRoom.id || joinGames) {
+                            throw new Error('You already have an active game room');
+                        }
                         playerExists = gameRoom.players.some(function (player) { return player.playerId === player.playerId; });
+                        if (!playerExists) {
+                            throw new Error("You are already in the game room");
+                        }
                         if (!(gameRoom.players.length >= variables_1.playersMax)) return [3 /*break*/, 5];
                         gameRoom.observers.push({
                             playerId: player.playerId,

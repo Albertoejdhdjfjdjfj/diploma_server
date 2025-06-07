@@ -7,7 +7,7 @@ import { PubController } from "../assets/classes/PubController";
 import { Role } from "../assets/interfaces/Role";
 import { GameAlgorithms } from "../assets/classes/GameAlgorithms";
 import { Player } from "../assets/interfaces/Player";
-import { rolesLine } from "../assets/variables/variables";
+import {roles} from "../assets/variables/variables"
 import { sendAITimeoutMessage } from "../assets/functions/sendAITimeoutMessage";
 
 export class GameCore{
@@ -43,8 +43,7 @@ export class GameCore{
             await PubController.pubMessage(this.currentGame,this.pubsub);
             
             this.currentGame=await DBController.setRoles(this.currentGame,GameAlgorithms.distributeRoles(this.currentGame.players));
-            
-            for(let role of rolesLine){
+            for(let role of roles){
                 this.currentGame=await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},role,`You are ${role}`,2000)
                 await PubController.pubMessage(this.currentGame,this.pubsub);
             } 
@@ -69,22 +68,15 @@ export class GameCore{
         const lastRoleInLine=this.currentGame.roleInLine;
         const nextRoleInLine = GameAlgorithms.nextRoleInLine(this.currentGame);
         this.currentGame = await DBController.setRoleInLine(this.currentGame,nextRoleInLine);
-        console.log(nextRoleInLine)
 
         if(lastRoleInLine!==this.currentGame.roleInLine){    
             this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,`The ${this.currentGame.roleInLine} is waking up`);
             await PubController.pubMessage(this.currentGame,this.pubsub) 
         }
 
-        if(!this.currentGame.roleInLine){
-            console.log('hi')
-            let nextRoleInLine:string = GameAlgorithms.nextRoleInLine(this.currentGame);  
-            this.currentGame = await DBController.setRoleInLine(this.currentGame,nextRoleInLine)
-            
-            if(nextRoleInLine===Roles.NOBODY){
+        if(!this.currentGame.roleInLine){    
                 this.currentGame=await DBController.setPhase(this.currentGame,GamePhase.DAY);
                 this.currentGame = await DBController.cleanVoting(this.currentGame);
-            }
         }
         else{
             const nextPlayerInLine:Player|null = GameAlgorithms.nextPlayerInLine(this.currentGame);

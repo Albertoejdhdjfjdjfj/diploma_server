@@ -168,7 +168,7 @@ var GameAlgorithms = /** @class */ (function () {
         }
         var currentPlayerIndex = players.findIndex(function (role) { var _a; return role.player.nickname === ((_a = currentGame.playerInLine) === null || _a === void 0 ? void 0 : _a.nickname); });
         if (currentPlayerIndex + 1 <= players.length) {
-            return currentGame.roles[currentPlayerIndex + 1].player;
+            return players[currentPlayerIndex + 1].player;
         }
         return null;
     };

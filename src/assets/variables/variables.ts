@@ -222,3 +222,13 @@ export const rolesDistribution: Array<Array<RoleConfig>> = [
         Roles.MANIAC,
         Roles.DOCTOR,         
     ]
+
+     export const roles:Array<string> = [ 
+        Roles.LOVER,
+        Roles.SHERIFF,
+        Roles.MAFIA,
+        Roles.DON,
+        Roles.MANIAC,
+        Roles.DOCTOR,   
+        Roles.CIVILIAN,
+    ]

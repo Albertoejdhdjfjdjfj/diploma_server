@@ -4,13 +4,93 @@ import { Roles } from "../enums/Roles";
 
 export function filterMessage(message:Message,receiverRole:String):Message|null{
      switch(receiverRole){
-          case Roles.LOVER: return  message.phase===GamePhase.VOTING || message.receiverRole === Roles.ALL|| message.receiverRole === Roles.LOVER?message:null;
-          case Roles.MAFIA: return  message.phase===GamePhase.VOTING || message.receiverRole === Roles.ALL || message.receiverRole === Roles.MAFIA?message:null;
-          case Roles.DON: return  message.phase===GamePhase.VOTING || message.receiverRole === Roles.ALL || message.receiverRole === Roles.MAFIA || message.receiverRole === Roles.DON?message:null;
-          case Roles.SHERIFF: return  message.phase===GamePhase.VOTING || message.receiverRole === Roles.ALL || message.receiverRole === Roles.SHERIFF?message:null;
-          case Roles.DOCTOR: return  message.phase===GamePhase.VOTING || message.receiverRole === Roles.ALL|| message.receiverRole === Roles.DOCTOR?message:null;
-          case Roles.MANIAC: return  message.phase===GamePhase.VOTING || message.receiverRole === Roles.ALL|| message.receiverRole === Roles.MANIAC?message:null;        
+          case Roles.LOVER:{
+               if(message.receiverRole===Roles.LOVER){
+                    return message;
+               }
+
+               if(message.receiverRole===Roles.ALL){
+                         return message
+               }
+
+               return null;
+          },
+          case Roles.MAFIA: {
+               if(message.receiverRole===Roles.MAFIA){
+                    return message;
+               }
+
+               if(message.receiverRole===Roles.ALL){
+                         return message
+               }
+
+               return null;
+          },
+          case Roles.DON:{
+               if(message.phase===GamePhase.NIGHT){
+                    if(message.receiverRole===Roles.MAFIA){
+                         return message;
+                    }
+                    if(message.receiverRole===Roles.DON){
+                         return message;
+                    }
+               }
+
+               if(message.receiverRole===Roles.DON){
+                         return message;
+               }
+
+               if(message.receiverRole===Roles.ALL){
+                         return message
+               }
+
+               return null;
+          }
+          case Roles.SHERIFF:{
+               if(message.receiverRole===Roles.SHERIFF){
+                         return message;
+               }
+
+               if(message.receiverRole===Roles.ALL){
+                         return message
+               }
+
+               return null;
+          }
+          case Roles.DOCTOR:{
+               if(message.receiverRole===Roles.DOCTOR){
+                    return message;
+               }
+
+               if(message.receiverRole===Roles.ALL){
+                         return message
+               }
+
+               return null;
+          }
+          case Roles.MANIAC:{
+               if(message.receiverRole===Roles.MANIAC){
+                    return message;
+               }
+
+               if(message.receiverRole===Roles.ALL){
+                         return message
+               }
+
+               return null;
+          } 
+          case Roles.CIVILIAN:{
+               if(message.receiverRole===Roles.CIVILIAN){
+                         return message;
+               }
+
+               if(message.receiverRole===Roles.ALL){
+                         return message
+               }
+
+               return null;
+          }
      }
 
-     return null
+     return message
 }

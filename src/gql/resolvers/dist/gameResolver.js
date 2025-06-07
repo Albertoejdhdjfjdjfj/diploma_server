@@ -46,6 +46,7 @@ exports.__esModule = true;
 var Game_1 = require("../../assets/models/Game");
 var GameRoom_1 = require("../../assets/models/GameRoom");
 var graphql_subscriptions_1 = require("graphql-subscriptions");
+var variables_1 = require("../../assets/variables/variables");
 var actionsList_1 = require("../../assets/actions/actionsList");
 var decodeToken_1 = require("../../assets/functions/decodeToken");
 var filterChat_1 = require("../../assets/functions/filterChat");
@@ -146,6 +147,9 @@ var gameResolver = {
                         }
                         if (player.playerId !== gameRoom.creator.playerId) {
                             throw new Error("You are not creator of this game");
+                        }
+                        if (gameRoom.players.length < variables_1.playersMin) {
+                            throw new Error("Not enough players");
                         }
                         startedGame = new Game_1.GameModel({
                             players: __spreadArrays(gameRoom.players),

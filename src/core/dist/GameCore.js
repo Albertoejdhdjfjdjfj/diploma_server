@@ -89,7 +89,7 @@ var GameCore = /** @class */ (function () {
     };
     GameCore.prototype.startNewRound = function () {
         return __awaiter(this, void 0, Promise, function () {
-            var _a, _b, _i, rolesLine_1, role, _c, _d, _e, _f;
+            var _a, _b, _i, roles_1, role, _c, _d, _e, _f;
             return __generator(this, function (_g) {
                 switch (_g.label) {
                     case 0:
@@ -105,11 +105,11 @@ var GameCore = /** @class */ (function () {
                         return [4 /*yield*/, dbController_1.DBController.setRoles(this.currentGame, GameAlgorithms_1.GameAlgorithms.distributeRoles(this.currentGame.players))];
                     case 3:
                         _b.currentGame = _g.sent();
-                        _i = 0, rolesLine_1 = variables_1.rolesLine;
+                        _i = 0, roles_1 = variables_1.roles;
                         _g.label = 4;
                     case 4:
-                        if (!(_i < rolesLine_1.length)) return [3 /*break*/, 8];
-                        role = rolesLine_1[_i];
+                        if (!(_i < roles_1.length)) return [3 /*break*/, 8];
+                        role = roles_1[_i];
                         _c = this;
                         return [4 /*yield*/, dbController_1.DBController.addMessage(this.currentGame, { nickname: Roles_1.Roles.ADMIN, playerId: Roles_1.Roles.ADMIN }, role, "You are " + role, 2000)];
                     case 5:
@@ -145,105 +145,96 @@ var GameCore = /** @class */ (function () {
     GameCore.prototype.nightPhase = function () {
         var _a, _b, _c, _d;
         return __awaiter(this, void 0, Promise, function () {
-            var _e, lastRoleInLine, nextRoleInLine, _f, _g, nextRoleInLine_1, _h, _j, _k, nextPlayerInLine, _l, _m, _o, mafia, winner, _p, _q, _r, _s, _t;
-            return __generator(this, function (_u) {
-                switch (_u.label) {
+            var _e, lastRoleInLine, nextRoleInLine, _f, _g, _h, _j, nextPlayerInLine, _k, _l, _m, mafia, winner, _o, _p, _q, _r, _s;
+            return __generator(this, function (_t) {
+                switch (_t.label) {
                     case 0:
                         if (!(this.currentGame.roleInLine === Roles_1.Roles.NOBODY &&
                             this.currentGame.playerInLine === null)) return [3 /*break*/, 3];
                         _e = this;
                         return [4 /*yield*/, dbController_1.DBController.addMessage(this.currentGame, { nickname: Roles_1.Roles.ADMIN, playerId: Roles_1.Roles.ADMIN }, Roles_1.Roles.ALL, "The city is falling asleep")];
                     case 1:
-                        _e.currentGame = _u.sent();
+                        _e.currentGame = _t.sent();
                         return [4 /*yield*/, PubController_1.PubController.pubMessage(this.currentGame, this.pubsub)];
                     case 2:
-                        _u.sent();
-                        _u.label = 3;
+                        _t.sent();
+                        _t.label = 3;
                     case 3:
                         lastRoleInLine = this.currentGame.roleInLine;
                         nextRoleInLine = GameAlgorithms_1.GameAlgorithms.nextRoleInLine(this.currentGame);
                         _f = this;
                         return [4 /*yield*/, dbController_1.DBController.setRoleInLine(this.currentGame, nextRoleInLine)];
                     case 4:
-                        _f.currentGame = _u.sent();
-                        console.log(nextRoleInLine);
+                        _f.currentGame = _t.sent();
                         if (!(lastRoleInLine !== this.currentGame.roleInLine)) return [3 /*break*/, 7];
                         _g = this;
                         return [4 /*yield*/, dbController_1.DBController.addMessage(this.currentGame, { nickname: Roles_1.Roles.ADMIN, playerId: Roles_1.Roles.ADMIN }, Roles_1.Roles.ALL, "The " + this.currentGame.roleInLine + " is waking up")];
                     case 5:
-                        _g.currentGame = _u.sent();
+                        _g.currentGame = _t.sent();
                         return [4 /*yield*/, PubController_1.PubController.pubMessage(this.currentGame, this.pubsub)];
                     case 6:
-                        _u.sent();
-                        _u.label = 7;
+                        _t.sent();
+                        _t.label = 7;
                     case 7:
-                        if (!!this.currentGame.roleInLine) return [3 /*break*/, 12];
-                        console.log('hi');
-                        nextRoleInLine_1 = GameAlgorithms_1.GameAlgorithms.nextRoleInLine(this.currentGame);
+                        if (!!this.currentGame.roleInLine) return [3 /*break*/, 10];
                         _h = this;
-                        return [4 /*yield*/, dbController_1.DBController.setRoleInLine(this.currentGame, nextRoleInLine_1)];
-                    case 8:
-                        _h.currentGame = _u.sent();
-                        if (!(nextRoleInLine_1 === Roles_1.Roles.NOBODY)) return [3 /*break*/, 11];
-                        _j = this;
                         return [4 /*yield*/, dbController_1.DBController.setPhase(this.currentGame, GamePhase_1.GamePhase.DAY)];
+                    case 8:
+                        _h.currentGame = _t.sent();
+                        _j = this;
+                        return [4 /*yield*/, dbController_1.DBController.cleanVoting(this.currentGame)];
                     case 9:
-                        _j.currentGame = _u.sent();
-                        _k = this;
-                        return [4 /*yield*/, dbController_1.DBController.cleanVoting(this.currentGame)];
+                        _j.currentGame = _t.sent();
+                        return [3 /*break*/, 15];
                     case 10:
-                        _k.currentGame = _u.sent();
-                        _u.label = 11;
-                    case 11: return [3 /*break*/, 17];
-                    case 12:
                         nextPlayerInLine = GameAlgorithms_1.GameAlgorithms.nextPlayerInLine(this.currentGame);
-                        _l = this;
+                        _k = this;
                         return [4 /*yield*/, dbController_1.DBController.setPlayerInLine(this.currentGame, nextPlayerInLine)];
-                    case 13:
-                        _l.currentGame = _u.sent();
-                        if (!(this.currentGame.playerInLine && ((_b = dbController_1.DBController.getPlayerRoleById(this.currentGame, (_a = this.currentGame.playerInLine) === null || _a === void 0 ? void 0 : _a.playerId)) === null || _b === void 0 ? void 0 : _b.alibi) === this.currentGame.round)) return [3 /*break*/, 15];
-                        _m = this;
+                    case 11:
+                        _k.currentGame = _t.sent();
+                        if (!(this.currentGame.playerInLine && ((_b = dbController_1.DBController.getPlayerRoleById(this.currentGame, (_a = this.currentGame.playerInLine) === null || _a === void 0 ? void 0 : _a.playerId)) === null || _b === void 0 ? void 0 : _b.alibi) === this.currentGame.round)) return [3 /*break*/, 13];
+                        _l = this;
                         return [4 /*yield*/, dbController_1.DBController.addMessage(this.currentGame, { nickname: Roles_1.Roles.ADMIN, playerId: Roles_1.Roles.ADMIN }, this.currentGame.roleInLine, "You are blocked, your lover chose you")];
-                    case 14:
-                        _m.currentGame = _u.sent();
+                    case 12:
+                        _l.currentGame = _t.sent();
                         this.nightPhase();
-                        return [3 /*break*/, 17];
-                    case 15:
-                        _o = this;
+                        return [3 /*break*/, 15];
+                    case 13:
+                        _m = this;
                         return [4 /*yield*/, dbController_1.DBController.addMessage(this.currentGame, { nickname: Roles_1.Roles.ADMIN, playerId: Roles_1.Roles.ADMIN }, this.currentGame.roleInLine, "This is " + ((_c = this.currentGame.playerInLine) === null || _c === void 0 ? void 0 : _c.nickname) + " speaking")];
-                    case 16:
-                        _o.currentGame = _u.sent();
-                        _u.label = 17;
-                    case 17:
-                        if (!(this.currentGame.roleInLine === Roles_1.Roles.MAFIA)) return [3 /*break*/, 24];
+                    case 14:
+                        _m.currentGame = _t.sent();
+                        _t.label = 15;
+                    case 15:
+                        if (!(this.currentGame.roleInLine === Roles_1.Roles.MAFIA)) return [3 /*break*/, 22];
                         mafia = this.currentGame.roles.filter(function (role) { return role.name === Roles_1.Roles.MAFIA || role.name === Roles_1.Roles.DON; });
-                        if (!(this.currentGame.voting.length == mafia.length)) return [3 /*break*/, 24];
+                        if (!(this.currentGame.voting.length == mafia.length)) return [3 /*break*/, 22];
                         winner = GameAlgorithms_1.GameAlgorithms.voting(this.currentGame.voting);
-                        if (!winner) return [3 /*break*/, 20];
-                        _p = this;
+                        if (!winner) return [3 /*break*/, 18];
+                        _o = this;
                         return [4 /*yield*/, dbController_1.DBController.setKill(this.currentGame, winner.playerId)];
-                    case 18:
-                        _p.currentGame = _u.sent();
-                        _q = this;
+                    case 16:
+                        _o.currentGame = _t.sent();
+                        _p = this;
                         return [4 /*yield*/, dbController_1.DBController.addMessage(this.currentGame, { nickname: Roles_1.Roles.ADMIN, playerId: Roles_1.Roles.ADMIN }, this.currentGame.roleInLine, ((_d = this.currentGame.playerInLine) === null || _d === void 0 ? void 0 : _d.nickname) + " won the vote")];
-                    case 19:
-                        _q.currentGame = _u.sent();
-                        return [3 /*break*/, 24];
-                    case 20:
-                        _r = this;
+                    case 17:
+                        _p.currentGame = _t.sent();
+                        return [3 /*break*/, 22];
+                    case 18:
+                        _q = this;
                         return [4 /*yield*/, dbController_1.DBController.cleanVoting(this.currentGame)];
-                    case 21:
-                        _r.currentGame = _u.sent();
-                        _s = this;
+                    case 19:
+                        _q.currentGame = _t.sent();
+                        _r = this;
                         return [4 /*yield*/, dbController_1.DBController.setPlayerInLine(this.currentGame, null)];
-                    case 22:
-                        _s.currentGame = _u.sent();
-                        _t = this;
+                    case 20:
+                        _r.currentGame = _t.sent();
+                        _s = this;
                         return [4 /*yield*/, dbController_1.DBController.addMessage(this.currentGame, { nickname: Roles_1.Roles.ADMIN, playerId: Roles_1.Roles.ADMIN }, this.currentGame.roleInLine, "There is no winner of the poll, please vote again")];
-                    case 23:
-                        _t.currentGame = _u.sent();
-                        _u.label = 24;
-                    case 24: return [2 /*return*/];
+                    case 21:
+                        _s.currentGame = _t.sent();
+                        _t.label = 22;
+                    case 22: return [2 /*return*/];
                 }
             });
         });

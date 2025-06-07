@@ -136,7 +136,7 @@ export class GameAlgorithms{
           const currentPlayerIndex = players.findIndex((role: Role) => role.player.nickname === currentGame.playerInLine?.nickname);
 
           if(currentPlayerIndex+1<=players.length){
-               return currentGame.roles[currentPlayerIndex+1].player
+              return players[currentPlayerIndex+1].player
           }
       
           return null

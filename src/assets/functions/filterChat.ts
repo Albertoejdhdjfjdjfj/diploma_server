@@ -4,13 +4,92 @@ import { Roles } from "../enums/Roles";
 
 export function filterChat(chat:Array<Message>,receiverRole:String):Array<Message>{
      switch(receiverRole){
-          case Roles.LOVER: return chat.filter((message:Message)=> (message.receiverRole === Roles.ALL) || (message.receiverRole === Roles.LOVER))
-          case Roles.MAFIA: return chat.filter((message:Message)=> (message.receiverRole === Roles.ALL) || (message.receiverRole === Roles.MAFIA))
-          case Roles.DON: return chat.filter((message:Message)=> ((message.phase===GamePhase.VOTING) && (message.receiverRole===Roles.DON)) || (message.receiverRole === Roles.ALL) || (message.receiverRole === Roles.MAFIA) || (message.receiverRole === Roles.DON))
-          case Roles.SHERIFF: return chat.filter((message:Message)=> (message.receiverRole === Roles.ALL) || (message.receiverRole === Roles.SHERIFF))
-          case Roles.DOCTOR: return chat.filter((message:Message)=> (message.receiverRole === Roles.ALL) || (message.receiverRole === Roles.DOCTOR))
-          case Roles.MANIAC: return chat.filter((message:Message)=> (message.receiverRole === Roles.ALL) || (message.receiverRole === Roles.MANIAC))   
-          case Roles.CIVILIAN:return chat.filter((message:Message)=> (message.receiverRole === Roles.ALL) || (message.receiverRole === Roles.CIVILIAN))     
+          case Roles.LOVER: return chat.filter((message:Message)=>{
+               if(message.receiverRole===Roles.LOVER){
+                    return true;
+               }
+
+               if(message.receiverRole===Roles.ALL){
+                         return true
+               }
+
+               return false;
+          })
+          case Roles.MAFIA: return chat.filter((message:Message)=>{
+               if(message.receiverRole===Roles.MAFIA){
+                    return true;
+               }
+
+               if(message.receiverRole===Roles.ALL){
+                         return true
+               }
+
+               return false;
+          })
+          case Roles.DON: return chat.filter((message:Message)=>{
+               if(message.phase===GamePhase.NIGHT){
+                    if(message.receiverRole===Roles.MAFIA){
+                         return true;
+                    }
+                    if(message.receiverRole===Roles.DON){
+                         return true;
+                    }
+               }
+
+               if(message.receiverRole===Roles.DON){
+                         return true;
+               }
+
+               if(message.receiverRole===Roles.ALL){
+                         return true
+               }
+
+               return false;
+          })
+          case Roles.SHERIFF: return chat.filter((message:Message)=>{
+               if(message.receiverRole===Roles.SHERIFF){
+                         return true;
+               }
+
+               if(message.receiverRole===Roles.ALL){
+                         return true
+               }
+
+               return false;
+          })
+          case Roles.DOCTOR: return chat.filter((message:Message)=>{
+               if(message.receiverRole===Roles.DOCTOR){
+                    return true;
+               }
+
+               if(message.receiverRole===Roles.ALL){
+                         return true
+               }
+
+               return false;
+          })
+          case Roles.MANIAC: return chat.filter((message:Message)=>{
+               if(message.receiverRole===Roles.MANIAC){
+                    return true;
+               }
+
+               if(message.receiverRole===Roles.ALL){
+                         return true
+               }
+
+               return false;
+          }) 
+          case Roles.CIVILIAN:return chat.filter((message:Message)=>{
+               if(message.receiverRole===Roles.CIVILIAN){
+                         return true;
+               }
+
+               if(message.receiverRole===Roles.ALL){
+                         return true
+               }
+
+               return false;
+          })  
      }
 
      return chat 

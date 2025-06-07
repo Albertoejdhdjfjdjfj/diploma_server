@@ -96,9 +96,9 @@ const gameResolver = {
                       throw new Error("You are not creator of this game");
                   }
       
-                //   if(gameRoom.players.length<playersMin){
-                //       throw new Error("Not enough players");
-                //   }
+                  if(gameRoom.players.length<playersMin){
+                      throw new Error("Not enough players");
+                  }
           
                   const startedGame:GameDocument = new GameModel({
                       players: [...gameRoom.players],
