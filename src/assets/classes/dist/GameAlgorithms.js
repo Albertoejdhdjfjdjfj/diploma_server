@@ -56,12 +56,59 @@ var GameAlgorithms = /** @class */ (function () {
     }
     GameAlgorithms.determineReceiverRole = function (senderRole, phase, playerRoleName) {
         switch (senderRole) {
-            case Roles_1.Roles.LOVER: return phase === GamePhase_1.GamePhase.NIGHT ? Roles_1.Roles.LOVER : Roles_1.Roles.ALL;
-            case Roles_1.Roles.MAFIA: return phase === GamePhase_1.GamePhase.NIGHT ? Roles_1.Roles.MAFIA : Roles_1.Roles.ALL;
-            case Roles_1.Roles.DON: return (phase === GamePhase_1.GamePhase.VOTING || phase === GamePhase_1.GamePhase.DISCUSSION) ? Roles_1.Roles.ALL : playerRoleName === Roles_1.Roles.MAFIA ? Roles_1.Roles.MAFIA : Roles_1.Roles.DON;
-            case Roles_1.Roles.SHERIFF: return phase === GamePhase_1.GamePhase.NIGHT ? Roles_1.Roles.SHERIFF : Roles_1.Roles.ALL;
-            case Roles_1.Roles.DOCTOR: phase === GamePhase_1.GamePhase.NIGHT ? Roles_1.Roles.DOCTOR : Roles_1.Roles.ALL;
-            case Roles_1.Roles.MANIAC: phase === GamePhase_1.GamePhase.NIGHT ? Roles_1.Roles.MANIAC : Roles_1.Roles.ALL;
+            case Roles_1.Roles.LOVER: {
+                if (phase === GamePhase_1.GamePhase.NIGHT) {
+                    return Roles_1.Roles.LOVER;
+                }
+                else {
+                    return Roles_1.Roles.ALL;
+                }
+            }
+            case Roles_1.Roles.MAFIA: {
+                if (phase === GamePhase_1.GamePhase.NIGHT) {
+                    return Roles_1.Roles.MAFIA;
+                }
+                else {
+                    return Roles_1.Roles.ALL;
+                }
+            }
+            case Roles_1.Roles.DON: {
+                if (phase === GamePhase_1.GamePhase.NIGHT) {
+                    if (playerRoleName === Roles_1.Roles.DON) {
+                        return Roles_1.Roles.DON;
+                    }
+                    if (playerRoleName === Roles_1.Roles.MAFIA) {
+                        return Roles_1.Roles.MAFIA;
+                    }
+                }
+                else {
+                    return Roles_1.Roles.ALL;
+                }
+            }
+            case Roles_1.Roles.SHERIFF: {
+                if (phase === GamePhase_1.GamePhase.NIGHT) {
+                    return Roles_1.Roles.SHERIFF;
+                }
+                else {
+                    return Roles_1.Roles.ALL;
+                }
+            }
+            case Roles_1.Roles.DOCTOR: {
+                if (phase === GamePhase_1.GamePhase.NIGHT) {
+                    return Roles_1.Roles.DOCTOR;
+                }
+                else {
+                    return Roles_1.Roles.ALL;
+                }
+            }
+            case Roles_1.Roles.MANIAC: {
+                if (phase === GamePhase_1.GamePhase.NIGHT) {
+                    return Roles_1.Roles.MANIAC;
+                }
+                else {
+                    return Roles_1.Roles.ALL;
+                }
+            }
         }
         return Roles_1.Roles.NOBODY;
     };
@@ -129,10 +176,17 @@ var GameAlgorithms = /** @class */ (function () {
     };
     GameAlgorithms.nextRoleInLine = function (currentGame) {
         var currentRole = currentGame.roleInLine;
+        if (currentRole === Roles_1.Roles.MAFIA) {
+            var players = currentGame.roles.filter(function (role) { return role.name === Roles_1.Roles.MAFIA || role.name === Roles_1.Roles.DON; });
+            var alibi = players.some(function (pl) { return pl.alibi === currentGame.round; });
+            var currentPlayerIndex = players.findIndex(function (role) { var _a; return role.player.nickname === ((_a = currentGame.playerInLine) === null || _a === void 0 ? void 0 : _a.nickname); });
+            if (currentPlayerIndex + 1 < players.length && !alibi) {
+                return Roles_1.Roles.MAFIA;
+            }
+        }
         var currentRoleIndex = variables_2.rolesLine.indexOf(currentRole);
         var nextRoleIndex = currentRoleIndex + 1;
-        console.log(nextRoleIndex, currentGame.roles.length, nextRoleIndex === currentGame.roles.length);
-        if (nextRoleIndex === currentGame.roles.length) {
+        if (nextRoleIndex >= variables_2.rolesLine.length) {
             return Roles_1.Roles.NOBODY;
         }
         var _loop_1 = function (i) {
@@ -151,26 +205,22 @@ var GameAlgorithms = /** @class */ (function () {
     };
     GameAlgorithms.nextPlayer = function (currentGame) {
         var playerIndex = currentGame.players.findIndex(function (player) { var _a; return player.nickname === ((_a = currentGame.playerInLine) === null || _a === void 0 ? void 0 : _a.nickname); });
-        if (playerIndex + 1 >= currentGame.players.length) {
+        if (playerIndex + 1 > currentGame.players.length) {
             return null;
         }
-        console.log(currentGame.players);
-        console.log(currentGame.players[playerIndex]);
         return currentGame.players[playerIndex + 1];
     };
     GameAlgorithms.nextPlayerInLine = function (currentGame) {
         var players;
         if (currentGame.roleInLine === Roles_1.Roles.MAFIA) {
             players = currentGame.roles.filter(function (role) { return role.name === Roles_1.Roles.MAFIA || role.name === Roles_1.Roles.DON; });
+            var currentPlayerIndex = players.findIndex(function (role) { var _a; return role.player.nickname === ((_a = currentGame.playerInLine) === null || _a === void 0 ? void 0 : _a.nickname); });
+            if (currentPlayerIndex + 1 < players.length) {
+                return players[currentPlayerIndex + 1].player;
+            }
         }
-        else {
-            players = currentGame.roles.filter(function (role) { return role.name === currentGame.roleInLine; });
-        }
-        var currentPlayerIndex = players.findIndex(function (role) { var _a; return role.player.nickname === ((_a = currentGame.playerInLine) === null || _a === void 0 ? void 0 : _a.nickname); });
-        if (currentPlayerIndex + 1 <= players.length) {
-            return players[currentPlayerIndex + 1].player;
-        }
-        return null;
+        var playerIndex = currentGame.roles.findIndex(function (role) { return role.name === currentGame.roleInLine; });
+        return currentGame.roles[playerIndex].player;
     };
     GameAlgorithms.determinateKilled = function (currentGame) {
         var roles = currentGame.roles.filter(function (role) { return role.alive === false; });
@@ -179,26 +229,26 @@ var GameAlgorithms = /** @class */ (function () {
     GameAlgorithms.voting = function (players) {
         var voteCount = {};
         players.forEach(function (player) {
-            if (player.nickname in voteCount) {
-                voteCount[player.nickname]++;
-            }
-            else {
-                voteCount[player.nickname] = 1;
-            }
+            voteCount[player.nickname] = (voteCount[player.nickname] || 0) + 1;
         });
-        var winner = null;
         var maxVotes = 0;
+        var winner = null;
+        var winnerCount = 0;
         var _loop_2 = function (nickname, votes) {
             if (votes > maxVotes) {
                 maxVotes = votes;
                 winner = players.find(function (player) { return player.nickname === nickname; }) || null;
+                winnerCount = 1;
+            }
+            else if (votes === maxVotes) {
+                winnerCount++;
             }
         };
         for (var _i = 0, _a = Object.entries(voteCount); _i < _a.length; _i++) {
             var _b = _a[_i], nickname = _b[0], votes = _b[1];
             _loop_2(nickname, votes);
         }
-        return winner;
+        return winnerCount > 1 ? null : winner;
     };
     GameAlgorithms.distributeRoles = function (players) {
         var playersWithRoles = [];

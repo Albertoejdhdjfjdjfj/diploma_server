@@ -18,7 +18,7 @@ export class SelectionController{
                throw new Error("You can not choose yourself or sameone with the same role");
           }
           
-          if(targetRole.alibi === currentGame.round - 1){
+          if((targetRole.alibi === currentGame.round - 1)&&(targetRole.alibi-1>0)){
                throw new Error("You can not choose one player 2 times in a row.") 
           }
 
@@ -28,7 +28,8 @@ export class SelectionController{
 
                     for (const mafiaRole of mafiaPlayers) {
                          currentGame = await DBController.addAlibi(currentGame, mafiaRole.player.playerId);
-                    }                               
+                    }   
+                    currentGame = await DBController.addMessage(currentGame,playerRole.player,Roles.LOVER,targetRole.player.nickname);                            
                }
                else if(targetRole.name===Roles.DON){
                     const mafiaPlayers = currentGame.roles.filter(role => (role.name === Roles.MAFIA)||(role.name === Roles.DON));
@@ -36,8 +37,10 @@ export class SelectionController{
                     for (const mafiaRole of mafiaPlayers) {
                          currentGame = await DBController.addAlibi(currentGame, mafiaRole.player.playerId);
                     }
+                    currentGame = await DBController.addMessage(currentGame,playerRole.player,Roles.LOVER,targetRole.player.nickname);
                }
                else{
+                   currentGame = await DBController.addMessage(currentGame,playerRole.player,Roles.LOVER,targetRole.player.nickname);
                    currentGame = await DBController.addAlibi(currentGame,targetRole.player.playerId)
                }
           }
@@ -108,7 +111,7 @@ export class SelectionController{
 
      static async sheriffSelection(currentGame:GameDocument,playerRole:Role,targetRole:Role|undefined,pubsub:PubSub):Promise<GameDocument>{ 
           if(!targetRole){
-               throw new Error("You have to choose");  
+               throw new Error("You have to choose");   
           }
 
           if(targetRole.name === Roles.SHERIFF || targetRole.player.playerId === playerRole.player.playerId){

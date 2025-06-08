@@ -15,6 +15,8 @@ import { GameCore } from '../../core/GameCore';
 import { DBController } from '../../assets/classes/dbController';
 import { PubController } from '../../assets/classes/PubController';
 import { Message } from '../../assets/interfaces/Message';
+import { SelectionController } from '../../assets/classes/SelectionController';
+import { GamePhase } from '../../assets/enums/GamePhase';
 
 const pubsub = new PubSub();
 
@@ -142,14 +144,16 @@ const gameResolver = {
                     if(!targetId){
                         throw new Error("Target is not player in this game");
                     }
-                    await DBController.addMessage(currentGame,player,receiver,content) 
-                    await PubController.pubMessage(currentGame,pubsub)
+                    currentGame =await GameAlgorithms.selectionProcess(currentGame,player.playerId,targetId,pubsub)
                     new GameCore(currentGame,pubsub).game()
                     return
                 }
 
                 await DBController.addMessage(currentGame,player,receiver,content) 
                 await PubController.pubMessage(currentGame,pubsub)
+                if(currentGame.phase === GamePhase.DISCUSSION){
+                     new GameCore(currentGame,pubsub).game()
+                }
             } catch (error) {
                 throw new Error((error as Error).message);
             }

@@ -15,12 +15,59 @@ export class GameAlgorithms{
 
      static determineReceiverRole(senderRole:string,phase:string,playerRoleName:string):string{
           switch(senderRole){
-                   case Roles.LOVER: return phase === GamePhase.NIGHT? Roles.LOVER:Roles.ALL
-                   case Roles.MAFIA: return phase === GamePhase.NIGHT? Roles.MAFIA:Roles.ALL
-                   case Roles.DON: return (phase ===  GamePhase.VOTING || phase ===  GamePhase.DISCUSSION)? Roles.ALL:playerRoleName === Roles.MAFIA? Roles.MAFIA:Roles.DON
-                   case Roles.SHERIFF: return phase === GamePhase.NIGHT? Roles.SHERIFF:Roles.ALL
-                   case Roles.DOCTOR: phase === GamePhase.NIGHT? Roles.DOCTOR:Roles.ALL
-                   case Roles.MANIAC: phase === GamePhase.NIGHT? Roles.MANIAC:Roles.ALL         
+                   case Roles.LOVER:{
+                    if(phase === GamePhase.NIGHT){
+                         return Roles.LOVER
+                    }
+                    else{
+                         return Roles.ALL
+                    }
+               }
+                   case Roles.MAFIA:{
+                    if(phase === GamePhase.NIGHT){
+                         return Roles.MAFIA
+                    }
+                    else{
+                         return Roles.ALL
+                    }
+               }
+                   case Roles.DON: {
+                    if(phase === GamePhase.NIGHT){
+                         if(playerRoleName === Roles.DON){
+                              return Roles.DON
+                         }
+                         if(playerRoleName === Roles.MAFIA){
+                              return Roles.MAFIA
+                         }
+                    }
+                    else{
+                         return Roles.ALL
+                    }
+               }
+                   case Roles.SHERIFF: {
+                    if(phase === GamePhase.NIGHT){
+                         return Roles.SHERIFF
+                    }
+                    else{
+                         return Roles.ALL
+                    }
+               }
+                   case Roles.DOCTOR:{
+                    if(phase === GamePhase.NIGHT){
+                         return Roles.DOCTOR
+                    }
+                    else{
+                         return Roles.ALL
+                    }
+               }
+                   case Roles.MANIAC:{
+                    if(phase === GamePhase.NIGHT){
+                         return Roles.MANIAC
+                    }
+                    else{
+                         return Roles.ALL
+                    }
+               }       
           }
          
           return Roles.NOBODY
@@ -88,14 +135,22 @@ export class GameAlgorithms{
      static nextRoleInLine(currentGame: GameDocument): string {
      
           let currentRole:string=currentGame.roleInLine;
+
+          if(currentRole===Roles.MAFIA){
+             const players = currentGame.roles.filter((role: Role) => role.name === Roles.MAFIA || role.name === Roles.DON);
+             const alibi = players.some((pl)=>pl.alibi===currentGame.round)
+             const currentPlayerIndex = players.findIndex((role: Role) => role.player.nickname === currentGame.playerInLine?.nickname);
+               
+             if(currentPlayerIndex+1<players.length&&!alibi){
+               return Roles.MAFIA
+             }
+          }
      
           const currentRoleIndex:number = rolesLine.indexOf(currentRole);
 
           let nextRoleIndex = currentRoleIndex + 1;
-          
-          console.log(nextRoleIndex,currentGame.roles.length,nextRoleIndex === currentGame.roles.length)
 
-          if (nextRoleIndex === currentGame.roles.length) {
+          if (nextRoleIndex >= rolesLine.length) {
                return Roles.NOBODY;
           } 
      
@@ -113,12 +168,9 @@ export class GameAlgorithms{
      static nextPlayer(currentGame: GameDocument):Player|null {
          const playerIndex: number = currentGame.players.findIndex((player: Player) => player.nickname === currentGame.playerInLine?.nickname);
          
-         if (playerIndex +1 >= currentGame.players.length) {
+         if (playerIndex + 1 > currentGame.players.length) {
              return null;
          }
-
-         console.log(currentGame.players);
-         console.log(currentGame.players[playerIndex])
      
          return currentGame.players[playerIndex + 1];
      }
@@ -128,18 +180,16 @@ export class GameAlgorithms{
 
           if(currentGame.roleInLine===Roles.MAFIA){
                players = currentGame.roles.filter((role: Role) => role.name === Roles.MAFIA || role.name === Roles.DON);
-          }
-          else{
-               players = currentGame.roles.filter((role: Role) => role.name === currentGame.roleInLine);
-          }
-      
-          const currentPlayerIndex = players.findIndex((role: Role) => role.player.nickname === currentGame.playerInLine?.nickname);
+               const currentPlayerIndex = players.findIndex((role: Role) => role.player.nickname === currentGame.playerInLine?.nickname);
 
-          if(currentPlayerIndex+1<=players.length){
-              return players[currentPlayerIndex+1].player
+               if(currentPlayerIndex+1<players.length){
+                    return players[currentPlayerIndex+1].player
+               }
           }
+
+          const playerIndex = currentGame.roles.findIndex((role: Role) => role.name === currentGame.roleInLine);
       
-          return null
+          return currentGame.roles[playerIndex].player
       }
 
       static determinateKilled(currentGame:GameDocument):Array<Role>{
@@ -147,30 +197,29 @@ export class GameAlgorithms{
           return roles
       }
 
-      static voting(players:Array<Player>):Player|null {     
-          const voteCount: { [key: string]: number } = {};
-      
-          players.forEach(player => {
-              if (player.nickname in voteCount) {
-                  voteCount[player.nickname]++;
-              } else {
-                  voteCount[player.nickname] = 1;
-              }
-          });
-      
-          
-          let winner: Player | null = null;
-          let maxVotes = 0;
-      
-          for (const [nickname, votes] of Object.entries(voteCount)) {
-              if (votes > maxVotes) {
-                  maxVotes = votes;
-                  winner = players.find(player => player.nickname === nickname) || null; 
-              }
-          }
-     
-          return winner
-     }
+    static voting(players: Array<Player>): Player | null {
+    const voteCount: { [key: string]: number } = {};
+
+    players.forEach(player => {
+        voteCount[player.nickname] = (voteCount[player.nickname] || 0) + 1;
+    });
+
+    let maxVotes = 0;
+    let winner: Player | null = null;
+    let winnerCount = 0;
+
+    for (const [nickname, votes] of Object.entries(voteCount)) {
+        if (votes > maxVotes) {
+            maxVotes = votes;
+            winner = players.find(player => player.nickname === nickname) || null;
+            winnerCount = 1; 
+        } else if (votes === maxVotes) {
+            winnerCount++;
+        }
+    }
+
+    return winnerCount > 1 ? null : winner;
+}
 
      static distributeRoles(players: Player[]): Role[] {
           const playersWithRoles: Array<Role> = [];

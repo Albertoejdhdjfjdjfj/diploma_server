@@ -14,5 +14,5 @@ export class GameValidator{
                case Roles.MANIAC: return (targetRole !== Roles.MANIAC)?true:false;
           }
           return false;
-     }
+     } 
 }
