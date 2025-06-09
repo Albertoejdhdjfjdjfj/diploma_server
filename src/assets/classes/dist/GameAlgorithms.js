@@ -49,6 +49,7 @@ var variables_1 = require("../variables/variables");
 var Roles_1 = require("../enums/Roles");
 var SelectionController_1 = require("./SelectionController");
 var dbController_1 = require("./dbController");
+var PubController_1 = require("./PubController");
 var GameValidator_1 = require("./GameValidator");
 var variables_2 = require("../variables/variables");
 var GameAlgorithms = /** @class */ (function () {
@@ -109,6 +110,14 @@ var GameAlgorithms = /** @class */ (function () {
                     return Roles_1.Roles.ALL;
                 }
             }
+            case Roles_1.Roles.CIVILIAN: {
+                if (phase === GamePhase_1.GamePhase.NIGHT) {
+                    return Roles_1.Roles.CIVILIAN;
+                }
+                else {
+                    return Roles_1.Roles.ALL;
+                }
+            }
         }
         return Roles_1.Roles.NOBODY;
     };
@@ -116,6 +125,41 @@ var GameAlgorithms = /** @class */ (function () {
         var regex = /@(\w+)/g;
         var matches = regex.exec(text);
         return matches ? matches[1] : null;
+    };
+    GameAlgorithms.votingProcess = function (currentGame, playerId, targetId, pubsub) {
+        var _a;
+        return __awaiter(this, void 0, Promise, function () {
+            var playerRole, targetRole;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        playerRole = dbController_1.DBController.getPlayerRoleById(currentGame, playerId);
+                        if (!playerRole) {
+                            throw new Error("You are not a player in this game");
+                        }
+                        targetRole = dbController_1.DBController.getPlayerRoleById(currentGame, targetId);
+                        if (targetRole && (targetRole.player.playerId === playerRole.player.playerId)) {
+                            throw new Error("You can not choose yourself");
+                        }
+                        if (playerRole.player.nickname !== ((_a = currentGame.playerInLine) === null || _a === void 0 ? void 0 : _a.nickname)) {
+                            throw new Error("You can not select now");
+                        }
+                        if (!targetRole) {
+                            throw new Error("You have to choose");
+                        }
+                        return [4 /*yield*/, dbController_1.DBController.addVote(currentGame, targetRole.player)];
+                    case 1:
+                        currentGame = _b.sent();
+                        return [4 /*yield*/, dbController_1.DBController.addMessage(currentGame, playerRole.player, Roles_1.Roles.ALL, targetRole.player.nickname)];
+                    case 2:
+                        currentGame = _b.sent();
+                        return [4 /*yield*/, PubController_1.PubController.pubMessage(currentGame, pubsub)];
+                    case 3:
+                        _b.sent();
+                        return [2 /*return*/, currentGame];
+                }
+            });
+        });
     };
     GameAlgorithms.selectionProcess = function (currentGame, playerId, targetId, pubsub) {
         var _a, _b;
@@ -132,7 +176,7 @@ var GameAlgorithms = /** @class */ (function () {
                         if ((playerRole.name !== currentGame.roleInLine && playerRole.player.nickname !== ((_a = currentGame.playerInLine) === null || _a === void 0 ? void 0 : _a.nickname)) || playerRole.player.nickname !== ((_b = currentGame.playerInLine) === null || _b === void 0 ? void 0 : _b.nickname)) {
                             throw new Error("You can not select now");
                         }
-                        if (targetRole && !GameValidator_1.GameValidator.validTarget(playerRole.name, targetRole.name, currentGame.phase)) {
+                        if (targetRole && !GameValidator_1.GameValidator.validTarget(playerRole.name, targetRole.name, currentGame.phase) && (currentGame.phase !== GamePhase_1.GamePhase.VOTING)) {
                             throw new Error("You can not select this target");
                         }
                         _c = playerRole.name;
@@ -205,7 +249,7 @@ var GameAlgorithms = /** @class */ (function () {
     };
     GameAlgorithms.nextPlayer = function (currentGame) {
         var playerIndex = currentGame.players.findIndex(function (player) { var _a; return player.nickname === ((_a = currentGame.playerInLine) === null || _a === void 0 ? void 0 : _a.nickname); });
-        if (playerIndex + 1 > currentGame.players.length) {
+        if (playerIndex + 1 >= currentGame.players.length) {
             return null;
         }
         return currentGame.players[playerIndex + 1];

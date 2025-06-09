@@ -7,6 +7,7 @@ import { Roles } from "../enums/Roles";
 import { PubSub } from "graphql-subscriptions";
 import { SelectionController } from "./SelectionController";
 import { DBController } from "./dbController";
+import { PubController } from "./PubController";
 import { GameValidator } from "./GameValidator";
 import { rolesLine } from "../variables/variables";
 
@@ -68,6 +69,14 @@ export class GameAlgorithms{
                          return Roles.ALL
                     }
                }       
+               case Roles.CIVILIAN:{
+                    if(phase === GamePhase.NIGHT){
+                         return Roles.CIVILIAN
+                    }
+                    else{
+                         return Roles.ALL
+                    }
+               }    
           }
          
           return Roles.NOBODY
@@ -77,6 +86,33 @@ export class GameAlgorithms{
           const regex = /@(\w+)/g;
           const matches = regex.exec(text);
           return matches ? matches[1] : null; 
+     }
+
+     static async votingProcess(currentGame:GameDocument,playerId:string,targetId:string,pubsub:PubSub):Promise<GameDocument>{
+          const playerRole:Role|undefined = DBController.getPlayerRoleById(currentGame,playerId);
+
+          if(!playerRole){
+               throw new Error("You are not a player in this game")
+          }
+
+          const targetRole:Role|undefined = DBController.getPlayerRoleById(currentGame,targetId);
+
+          if(targetRole&&(targetRole.player.playerId === playerRole.player.playerId)){
+               throw new Error("You can not choose yourself");
+          }   
+     
+          if(playerRole.player.nickname !== currentGame.playerInLine?.nickname){
+               throw new Error("You can not select now");
+          }
+
+          if(!targetRole){
+               throw new Error("You have to choose");   
+          }
+          
+          currentGame = await DBController.addVote(currentGame,targetRole.player);
+          currentGame = await DBController.addMessage(currentGame,playerRole.player,Roles.ALL,targetRole.player.nickname);          
+          await PubController.pubMessage(currentGame,pubsub)
+          return currentGame;
      }
 
      static async selectionProcess(currentGame:GameDocument,playerId:string,targetId:string,pubsub:PubSub):Promise<GameDocument>{
@@ -93,7 +129,7 @@ export class GameAlgorithms{
                throw new Error("You can not select now");
           }
           
-          if(targetRole && !GameValidator.validTarget(playerRole.name,targetRole.name,currentGame.phase)){
+          if(targetRole && !GameValidator.validTarget(playerRole.name,targetRole.name,currentGame.phase)&&(currentGame.phase!==GamePhase.VOTING)){
                throw new Error("You can not select this target"); 
           }
          
@@ -168,7 +204,7 @@ export class GameAlgorithms{
      static nextPlayer(currentGame: GameDocument):Player|null {
          const playerIndex: number = currentGame.players.findIndex((player: Player) => player.nickname === currentGame.playerInLine?.nickname);
          
-         if (playerIndex + 1 > currentGame.players.length) {
+         if (playerIndex + 1 >= currentGame.players.length) {
              return null;
          }
      

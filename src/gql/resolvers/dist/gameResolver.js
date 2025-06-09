@@ -176,7 +176,7 @@ var gameResolver = {
             return __generator(this, function (_d) {
                 switch (_d.label) {
                     case 0:
-                        _d.trys.push([0, 6, , 7]);
+                        _d.trys.push([0, 9, , 10]);
                         content = args.content, gameId = args.gameId;
                         return [4 /*yield*/, Game_1.GameModel.findById(gameId)];
                     case 1:
@@ -193,30 +193,37 @@ var gameResolver = {
                         }
                         receiver = GameAlgorithms_1.GameAlgorithms.determineReceiverRole(playerRole.name, currentGame.phase, currentGame.roleInLine);
                         target = GameAlgorithms_1.GameAlgorithms.getWordStartingWithAt(content);
-                        if (!target) return [3 /*break*/, 3];
+                        if (!target) return [3 /*break*/, 6];
                         targetId = (_c = dbController_1.DBController.getPlayerByName(currentGame, target)) === null || _c === void 0 ? void 0 : _c.playerId;
                         if (!targetId) {
                             throw new Error("Target is not player in this game");
                         }
+                        if (!(currentGame.phase === GamePhase_1.GamePhase.NIGHT)) return [3 /*break*/, 3];
                         return [4 /*yield*/, GameAlgorithms_1.GameAlgorithms.selectionProcess(currentGame, player.playerId, targetId, pubsub)];
                     case 2:
                         currentGame = _d.sent();
+                        return [3 /*break*/, 5];
+                    case 3: return [4 /*yield*/, GameAlgorithms_1.GameAlgorithms.votingProcess(currentGame, player.playerId, targetId, pubsub)];
+                    case 4:
+                        currentGame = _d.sent();
+                        _d.label = 5;
+                    case 5:
                         new GameCore_1.GameCore(currentGame, pubsub).game();
                         return [2 /*return*/];
-                    case 3: return [4 /*yield*/, dbController_1.DBController.addMessage(currentGame, player, receiver, content)];
-                    case 4:
+                    case 6: return [4 /*yield*/, dbController_1.DBController.addMessage(currentGame, player, receiver, content)];
+                    case 7:
                         _d.sent();
                         return [4 /*yield*/, PubController_1.PubController.pubMessage(currentGame, pubsub)];
-                    case 5:
+                    case 8:
                         _d.sent();
                         if (currentGame.phase === GamePhase_1.GamePhase.DISCUSSION) {
                             new GameCore_1.GameCore(currentGame, pubsub).game();
                         }
-                        return [3 /*break*/, 7];
-                    case 6:
+                        return [3 /*break*/, 10];
+                    case 9:
                         error_5 = _d.sent();
                         throw new Error(error_5.message);
-                    case 7: return [2 /*return*/];
+                    case 10: return [2 /*return*/];
                 }
             });
         }); }

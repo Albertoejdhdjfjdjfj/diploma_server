@@ -137,6 +137,9 @@ var GameCore = /** @class */ (function () {
                         return [4 /*yield*/, PubController_1.PubController.pubMessage(this.currentGame, this.pubsub)];
                     case 12:
                         _g.sent();
+                        return [4 /*yield*/, this.nightPhase()];
+                    case 13:
+                        _g.sent();
                         return [2 /*return*/];
                 }
             });
@@ -190,7 +193,7 @@ var GameCore = /** @class */ (function () {
                         return [4 /*yield*/, this.nightPhase()];
                     case 10:
                         _t.sent();
-                        _t.label = 11;
+                        return [2 /*return*/];
                     case 11:
                         lastRoleInLine = this.currentGame.roleInLine;
                         nextRoleInLine = GameAlgorithms_1.GameAlgorithms.nextRoleInLine(this.currentGame);
@@ -239,7 +242,7 @@ var GameCore = /** @class */ (function () {
                         return [4 /*yield*/, this.nightPhase()];
                     case 23:
                         _t.sent();
-                        return [3 /*break*/, 27];
+                        return [2 /*return*/];
                     case 24:
                         _s = this;
                         return [4 /*yield*/, dbController_1.DBController.addMessage(this.currentGame, { nickname: Roles_1.Roles.ADMIN, playerId: Roles_1.Roles.ADMIN }, this.currentGame.roleInLine, "This is " + ((_c = this.currentGame.playerInLine) === null || _c === void 0 ? void 0 : _c.nickname) + " speaking")];
@@ -260,7 +263,6 @@ var GameCore = /** @class */ (function () {
             return __generator(this, function (_g) {
                 switch (_g.label) {
                     case 0:
-                        console.log("hi");
                         _a = this;
                         return [4 /*yield*/, dbController_1.DBController.addMessage(this.currentGame, { nickname: Roles_1.Roles.ADMIN, playerId: Roles_1.Roles.ADMIN }, Roles_1.Roles.ALL, "Everyone wakes up")];
                     case 1:
@@ -333,23 +335,20 @@ var GameCore = /** @class */ (function () {
                         return [4 /*yield*/, dbController_1.DBController.setPlayerInLine(this.currentGame, nextPlayerInLine)];
                     case 4:
                         _b.currentGame = _e.sent();
-                        if (!(nextPlayerInLine === null)) return [3 /*break*/, 7];
+                        if (!(nextPlayerInLine === null)) return [3 /*break*/, 6];
                         _c = this;
                         return [4 /*yield*/, dbController_1.DBController.setPhase(this.currentGame, GamePhase_1.GamePhase.VOTING)];
                     case 5:
                         _c.currentGame = _e.sent();
-                        return [4 /*yield*/, this.startNewRound()];
+                        return [3 /*break*/, 8];
                     case 6:
-                        _e.sent();
-                        return [3 /*break*/, 9];
-                    case 7:
                         _d = this;
                         return [4 /*yield*/, dbController_1.DBController.addMessage(this.currentGame, { nickname: Roles_1.Roles.ADMIN, playerId: Roles_1.Roles.ADMIN }, Roles_1.Roles.ALL, nextPlayerInLine.nickname + "'s speaking")];
-                    case 8:
+                    case 7:
                         _d.currentGame = _e.sent();
-                        _e.label = 9;
-                    case 9: return [4 /*yield*/, PubController_1.PubController.pubMessage(this.currentGame, this.pubsub)];
-                    case 10:
+                        _e.label = 8;
+                    case 8: return [4 /*yield*/, PubController_1.PubController.pubMessage(this.currentGame, this.pubsub)];
+                    case 9:
                         _e.sent();
                         return [2 /*return*/];
                 }
@@ -408,7 +407,7 @@ var GameCore = /** @class */ (function () {
                         return [4 /*yield*/, this.startNewRound()];
                     case 11:
                         _k.sent();
-                        return [3 /*break*/, 15];
+                        return [2 /*return*/];
                     case 12:
                         _g = this;
                         return [4 /*yield*/, dbController_1.DBController.addMessage(this.currentGame, { nickname: Roles_1.Roles.ADMIN, playerId: Roles_1.Roles.ADMIN }, Roles_1.Roles.ALL, "Today mistress visited him " + winner.nickname + ". He continues the game")];

@@ -53,6 +53,7 @@ export class GameCore{
         this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,`Round ${this.currentGame.round}`) 
         this.currentGame = await DBController.setPhase(this.currentGame,GamePhase.NIGHT);
         await PubController.pubMessage(this.currentGame,this.pubsub) 
+        await this.nightPhase();
     }
 
     private async nightPhase():Promise<void>{
@@ -78,6 +79,7 @@ export class GameCore{
                     this.currentGame = await DBController.setPlayerInLine(this.currentGame,null);
                     this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},this.currentGame.roleInLine,`There is no winner of the poll, please vote again`);
                     await this.nightPhase()
+                    return
                 }
             }
         }
@@ -104,6 +106,7 @@ export class GameCore{
                 this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},this.currentGame.roleInLine,"You are blocked, your lover chose you");
                 await PubController.pubMessage(this.currentGame,this.pubsub) 
                 await this.nightPhase()
+                return;
             }  
             else{
                 this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},this.currentGame.roleInLine,`This is ${this.currentGame.playerInLine?.nickname} speaking`);
@@ -113,7 +116,6 @@ export class GameCore{
     }
  
     private async dayPhase():Promise<void>{
-        console.log("hi")
         this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,`Everyone wakes up`);
         await PubController.pubMessage(this.currentGame,this.pubsub) 
         
@@ -148,8 +150,7 @@ export class GameCore{
         this.currentGame = await DBController.setPlayerInLine(this.currentGame,nextPlayerInLine);
 
         if(nextPlayerInLine === null){
-            this.currentGame=await DBController.setPhase(this.currentGame,GamePhase.VOTING); 
-            await this.startNewRound()           
+            this.currentGame=await DBController.setPhase(this.currentGame,GamePhase.VOTING);        
         }else{
             this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,`${nextPlayerInLine.nickname}'s speaking`)
         }
@@ -183,6 +184,7 @@ export class GameCore{
                     this.currentGame = await DBController.addPlayerToObservers(this.currentGame, winner);
                     await this.endingGame();
                     await this.startNewRound(); 
+                    return;
                 }
                 else{
                     this.currentGame = await DBController.addMessage(this.currentGame,{nickname:Roles.ADMIN,playerId:Roles.ADMIN},Roles.ALL,`Today mistress visited him ${winner.nickname}. He continues the game`);

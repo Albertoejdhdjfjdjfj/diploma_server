@@ -144,9 +144,14 @@ const gameResolver = {
                     if(!targetId){
                         throw new Error("Target is not player in this game");
                     }
-                    currentGame =await GameAlgorithms.selectionProcess(currentGame,player.playerId,targetId,pubsub)
-                    new GameCore(currentGame,pubsub).game()
-                    return
+
+                    if(currentGame.phase===GamePhase.NIGHT){
+                        currentGame =await GameAlgorithms.selectionProcess(currentGame,player.playerId,targetId,pubsub)
+                    }else{
+                        currentGame =await GameAlgorithms.votingProcess(currentGame,player.playerId,targetId,pubsub)
+                    }
+                     new GameCore(currentGame,pubsub).game()
+                     return
                 }
 
                 await DBController.addMessage(currentGame,player,receiver,content) 
